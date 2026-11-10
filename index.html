@@ -1,0 +1,1462 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Schafkopf-Stammtisch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Schafkopf">
+<meta name="theme-color" content="#3b2414">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Grenze+Gotisch:wght@600;800&display=swap">
+<style>
+/* Layout: Wirtshaus-Tisch auf einem Bildschirm — Holzleiste oben, Filz mit drei Gegnern, Stich in der Mitte, dein Fächer unten.
+   Bewusst ein einziges Farbthema (grüner Filz + Papier), unabhängig vom Systemthema. */
+:root{
+  --felt:#1f5d3d; --felt-hi:#2c7a51; --felt-deep:#113522;
+  --wood:#4b2e19; --wood-hi:#6b4426; --wood-dk:#2d1b0e;
+  --paper:#f7f0dd; --paper-2:#ece2c6; --card-bg:#fffdf7; --ink:#2b2118; --ink-soft:#6a5a48; --line:#0000001f;
+  --gold:#e2b23f; --red:#b8322a; --green-ok:#2b7a2f;
+  --f-display:'Grenze Gotisch', Georgia, 'Times New Roman', serif;
+  --f-body:'Alegreya Sans', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --cw: clamp(40px, min(16vw, 10.5vh), 112px);   /* Karten im Stich */
+  --hw: clamp(52px, min(22.5vw, 15.5vh), 138px); /* Karten in deiner Hand */
+  color-scheme: dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--felt-deep);color:var(--paper);font-family:var(--f-body);font-size:16px;
+  overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+button{font-family:inherit;font-size:inherit;cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+img{-webkit-user-drag:none}
+
+#app{height:100%;display:flex;flex-direction:column}
+#bar{display:flex;align-items:center;gap:8px;padding-block:6px;min-height:44px;
+  padding-left:max(14px, env(safe-area-inset-left, 0px));padding-right:max(14px, env(safe-area-inset-right, 0px));
+  background:linear-gradient(180deg,var(--wood-hi),var(--wood));border-bottom:2px solid var(--wood-dk);box-shadow:0 2px 8px #0006;z-index:5}
+#brand{font-family:var(--f-display);font-size:23px;font-weight:800;color:var(--gold);line-height:1;white-space:nowrap}
+#wallet{display:flex;align-items:center;gap:6px;border:0;border-radius:99px;background:#0000004d;padding:6px 11px 6px 8px;font-weight:800;font-size:15px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:inset 0 0 0 1px #ffffff26}
+#wallet .coin{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a6,#d9a62c 60%,#9a6f12);box-shadow:inset 0 0 0 1.5px #8a5e0a}
+#wallet.neg{color:#ffb4ac}
+#wallet .stk{font-weight:600;opacity:.75;font-size:12.5px}
+.spacer{flex:1}
+.ib{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;height:40px;border:0;border-radius:10px;background:#00000033;
+  box-shadow:inset 0 0 0 1px #ffffff2e;padding:0 10px;font-weight:700;font-size:14px}
+.ib svg{width:22px;height:22px;flex:none}
+.ib:disabled{opacity:.35;cursor:default}
+.ib .t{display:none}
+@media (min-width:820px){.ib .t{display:inline}}
+
+#ginfo{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 8px;font-size:14px;line-height:1.25;padding-block:5px;min-height:30px;
+  padding-left:max(14px, env(safe-area-inset-left, 0px));padding-right:max(14px, env(safe-area-inset-right, 0px));background:#0000003d;z-index:4;text-align:center}
+#ginfo b{color:#fff}
+.chip{font-size:12px;font-weight:800;padding:1px 8px;border-radius:99px;background:var(--gold);color:var(--ink);white-space:nowrap}
+.chip.red{background:var(--red);color:#fff}
+.chip.soft{background:#ffffff22;color:var(--paper)}
+
+#table{flex:1;position:relative;min-height:0;
+  background:radial-gradient(ellipse 80% 70% at 50% 48%, var(--felt-hi) 0%, var(--felt) 55%, var(--felt-deep) 100%)}
+#table::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.08;background-image:repeating-linear-gradient(45deg,#000 0 1px,transparent 1px 3px)}
+.seat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:2;max-width:31%}
+#seat2{top:8px;left:50%;transform:translateX(-50%);max-width:70%}
+#seat1{left:max(8px, env(safe-area-inset-left, 0px));top:30%}
+#seat3{right:max(8px, env(safe-area-inset-right, 0px));top:30%}
+.plate{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 6px;background:#0000004d;border:1px solid #ffffff22;
+  border-radius:12px;padding:4px 10px;font-size:13px;white-space:nowrap;transition:box-shadow .2s, border-color .2s}
+.plate b{font-size:15px}
+.plate .tk{opacity:.8;font-size:12px;font-variant-numeric:tabular-nums}
+.turn .plate,.plate.turn{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 16px #e2b23f88}
+.tag{font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:99px;text-transform:uppercase;letter-spacing:.4px}
+.tag.pl{background:var(--gold);color:var(--ink)}
+.tag.pa{background:#fff;color:var(--ink)}
+.tag.dl{background:#ffffff26;color:var(--paper)}
+.cards{display:flex;justify-content:center}
+.seat .cards>*+*{margin-left:calc(var(--w) * -.66)}
+.seat .cards.open{flex-wrap:wrap;max-width:calc(var(--cw) * 2.6);row-gap:3px}
+.seat .cards.open>*+*{margin-left:calc(var(--w) * -.45)}
+#seat2 .cards.open{max-width:none}
+
+.bubble{position:absolute;z-index:6;background:var(--paper);color:var(--ink);font-weight:800;font-size:15px;padding:6px 12px;border-radius:14px;
+  white-space:nowrap;box-shadow:0 3px 10px #0007;opacity:0;transform:scale(.8);transition:opacity .2s, transform .2s;pointer-events:none}
+.bubble.show{opacity:1;transform:scale(1)}
+#seat2 .bubble{top:100%;margin-top:4px}
+#seat1 .bubble{top:100%;left:0;margin-top:4px}
+#seat3 .bubble{top:100%;right:0;margin-top:4px}
+#me .bubble{bottom:100%;left:50%;transform:translateX(-50%) scale(.8);margin-bottom:4px}
+#me .bubble.show{transform:translateX(-50%) scale(1)}
+
+.trick{position:absolute;left:50%;top:56%;width:calc(var(--cw) * 3.3);height:calc(var(--cw) * 3.05);transform:translate(-50%,-50%);z-index:1}
+.slot{position:absolute}
+.slot0{left:50%;bottom:0;transform:translateX(-50%)}
+.slot2{left:50%;top:0;transform:translateX(-50%)}
+.slot1{left:0;top:50%;transform:translateY(-50%) rotate(-7deg)}
+.slot3{right:0;top:50%;transform:translateY(-50%) rotate(7deg)}
+.fly{animation:fly .32s cubic-bezier(.2,.8,.3,1) both}
+.f0{--fx:0;--fy:150%}.f1{--fx:-170%;--fy:0}.f2{--fx:0;--fy:-150%}.f3{--fx:170%;--fy:0}
+@keyframes fly{from{transform:translate(var(--fx),var(--fy)) scale(.85);opacity:.2}to{transform:none;opacity:1}}
+.slot>div{transition:transform .45s ease-in, opacity .45s ease-in}
+.trick.go .slot>div{opacity:0}
+.trick.g0 .slot>div{transform:translateY(260%) scale(.4)}
+.trick.g1 .slot>div{transform:translateX(-300%) scale(.4)}
+.trick.g2 .slot>div{transform:translateY(-260%) scale(.4)}
+.trick.g3 .slot>div{transform:translateX(300%) scale(.4)}
+.slot.win .card{box-shadow:0 0 0 3px var(--gold),0 6px 18px #000a}
+
+#msg{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:4;width:max-content;max-width:min(92%,560px);text-align:center;
+  background:#000000b3;color:#fff;border-radius:12px;padding:7px 13px;font-size:15px;line-height:1.3;opacity:0;transition:opacity .25s;pointer-events:none}
+#msg.show{opacity:1}
+#msg.warn{background:#7d1d17ee}
+#msg.tip{background:#5a4510f2}
+
+#me{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:4px;
+  padding-bottom:max(8px, env(safe-area-inset-bottom, 0px));
+  padding-left:max(10px, env(safe-area-inset-left, 0px));padding-right:max(10px, env(safe-area-inset-right, 0px));
+  background:linear-gradient(180deg,#0000,#00000059)}
+#hand{position:relative;width:100%;max-width:980px;height:calc(var(--hw) * 1.55 + 26px);touch-action:none}
+#hand .card{--w:var(--hw);position:absolute;left:0;bottom:4px;transform-origin:50% 120%;
+  transform:translate(var(--x,0px), calc(var(--dy,0px) + var(--lift,0px))) rotate(var(--rot,0deg));
+  transition:transform .16s ease-out, filter .15s;cursor:pointer}
+#hand.nt .card{transition:none}
+@media (hover:hover){#hand .card.playable:hover{--lift:-12px}}
+@media (max-width:420px){#brand{font-size:19px}#walStk{display:none}#bar{gap:6px}.ib{min-width:42px;padding:0 8px}}
+#hand .card.sel{--lift:-26px;box-shadow:0 0 0 3px var(--gold),0 10px 18px #000a}
+#hand .card.dim{filter:brightness(.6) saturate(.55)}
+#hand .card.hint{--lift:-16px;box-shadow:0 0 0 3px #7fd3ff,0 0 18px #7fd3ffaa}
+#hand .card.shake{animation:shake .35s}
+@keyframes shake{25%{translate:-7px 0}50%{translate:7px 0}75%{translate:-3px 0}}
+#handHint{font-size:12px;opacity:.7;height:14px;line-height:14px}
+
+/* Karten */
+.card{--w:var(--cw);position:relative;width:var(--w);height:calc(var(--w) * 1.55);border-radius:calc(var(--w) * .07);background:var(--card-bg);
+  box-shadow:0 2px 6px #0008;overflow:hidden;flex:none}
+.card img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.card .tmark{position:absolute;left:0;top:0;bottom:0;width:calc(var(--w) * .055);background:var(--gold);box-shadow:1px 0 0 #0004}
+.card.mini{--w:calc(var(--cw) * .5)}
+.card.tc{--w:calc(var(--cw) * .98)}
+.card.lst{--w:calc(var(--cw) * .72)}
+.back{--w:calc(var(--cw) * .42);width:var(--w);height:calc(var(--w) * 1.55);border-radius:calc(var(--w) * .1);flex:none;
+  background:radial-gradient(circle at 50% 50%,#ffffff22 0 18%,transparent 19%),repeating-linear-gradient(45deg,#1f4f86 0 3px,#173c69 3px 6px),repeating-linear-gradient(-45deg,#1f4f86 0 3px,#173c69 3px 6px);
+  box-shadow:0 1px 4px #0008, inset 0 0 0 2px #fbf6ea, inset 0 0 0 3px #173c69}
+
+/* Papier-Flächen */
+.panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:8;width:min(470px, calc(100% - 28px));max-height:calc(100% - 16px);overflow:auto;
+  background:var(--paper);color:var(--ink);border-radius:18px;box-shadow:0 12px 40px #000a, inset 0 0 0 1px #0000001a;padding:18px 18px 16px;
+  animation:pop .22s ease-out;user-select:text;-webkit-user-select:text;-webkit-overflow-scrolling:touch}
+@keyframes pop{from{transform:translate(-50%,-45%);opacity:0}}
+@media (max-width:640px){
+  .panel{left:0;right:0;top:auto;bottom:0;width:auto;transform:none;border-radius:20px 20px 0 0;max-height:calc(100% - 8px);
+    padding-left:max(18px, env(safe-area-inset-left, 0px));padding-right:max(18px, env(safe-area-inset-right, 0px));animation:slideup .25s ease-out}
+  @keyframes slideup{from{transform:translateY(40%);opacity:0}}
+}
+.panel h2,.panel h3,.sheet h2,.sheet h3{font-family:var(--f-display);font-weight:800;margin:0 0 6px;text-wrap:balance;color:var(--wood)}
+.panel h2{font-size:34px}.panel h3{font-size:26px}
+.panel p{margin:6px 0;line-height:1.4}
+.small{font-size:13.5px;color:var(--ink-soft)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btns button,.btn{flex:1 1 auto;min-height:46px;border:0;border-radius:12px;padding:10px 16px;font-weight:800;font-size:16px;background:var(--paper-2);color:var(--ink);box-shadow:inset 0 0 0 1px #00000026}
+.btns button.pri,.btn.pri{background:var(--wood);color:var(--paper);box-shadow:none}
+.btns button:active{filter:brightness(.95)}
+.grp{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:9px 0}
+.grp>span{width:100%;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--ink-soft)}
+.gb{display:inline-flex;align-items:center;gap:6px;min-height:44px;border:0;border-radius:12px;padding:6px 12px;font-weight:700;background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px #00000030}
+.gb img{width:22px;height:22px}
+.gb small{font-weight:500;color:var(--ink-soft)}
+.gb:hover:not(:disabled){box-shadow:inset 0 0 0 2px var(--wood)}
+.gb:disabled{opacity:.36;cursor:not-allowed}
+.sugg{background:#fff4cc;border-radius:10px;padding:8px 12px;font-size:15px}
+.toutline{display:flex;align-items:center;gap:10px;font-weight:700;margin-top:8px;min-height:40px}
+.toutline input{width:22px;height:22px;accent-color:var(--wood)}
+.res-head{font-size:19px;font-weight:800;line-height:1.3}
+.win{color:var(--green-ok)} .lose{color:var(--red)}
+.money{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;margin:2px 0}
+table.t{border-collapse:collapse;width:100%;font-size:14.5px;font-variant-numeric:tabular-nums}
+table.t td,table.t th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left}
+table.t td.n,table.t th.n{text-align:right}
+table.t tr.tot td{font-weight:800;border-top:2px solid var(--ink)}
+.pos{color:var(--green-ok);font-weight:700}.neg{color:var(--red);font-weight:700}
+.trow{display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.trow .lbl{width:100%;font-size:13.5px;font-weight:700}
+.trow .who{font-size:11px;text-align:center;color:var(--ink-soft)}
+.trow .cw{display:flex;flex-direction:column;align-items:center;gap:2px}
+.trow .cw.w .card{box-shadow:0 0 0 2px var(--gold),0 2px 6px #0006}
+
+/* Vollbild-Blätter: Menü, Einstellungen, Regeln */
+#modal{position:fixed;inset:0;z-index:20;background:#000000a6;display:flex;align-items:center;justify-content:center;
+  padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px));
+  padding-block:max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-bottom, 0px))}
+.sheet{position:relative;background:#efe7d3;color:var(--ink);border-radius:18px;width:min(700px,100%);max-height:100%;overflow:auto;padding:0 0 22px;
+  box-shadow:0 12px 40px #000;user-select:text;-webkit-user-select:text;-webkit-overflow-scrolling:touch}
+@media (max-width:640px){#modal{padding:0;align-items:stretch}.sheet{border-radius:0;max-height:none;height:100%;padding-bottom:max(22px, env(safe-area-inset-bottom, 0px))}}
+.shead{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;background:#efe7d3f2;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:10px 16px;padding-top:max(10px, env(safe-area-inset-top, 0px));border-bottom:1px solid var(--line)}
+.shead h2{flex:1;margin:0;font-size:28px}
+.shead button{border:0;border-radius:10px;min-height:40px;padding:0 14px;font-weight:800;background:var(--wood);color:var(--paper)}
+.sbody{padding:6px 16px 0}
+.sheet p,.sheet li{line-height:1.5;max-width:68ch}
+.sheet h3{font-size:22px;margin:20px 0 6px}
+.sheet ul{padding-left:20px;margin:6px 0}
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px}
+.menu button{border:0;border-radius:16px;padding:16px;text-align:left;background:#fff;box-shadow:0 1px 0 #0000001a;min-height:76px}
+.menu button b{display:block;font-size:18px;color:var(--wood)}
+.menu button span{font-size:13.5px;color:var(--ink-soft)}
+/* iOS-artige Einstellungsgruppen */
+.sec{margin:18px 0 6px;padding:0 6px;font-size:12.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-soft)}
+.group{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 0 #0000001a}
+.rowi{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 14px;border-bottom:1px solid #0000000f}
+.rowi:last-child{border-bottom:0}
+.rowi .lab{flex:1;min-width:0}
+.rowi .lab b{display:block;font-weight:700;font-size:16px}
+.rowi .lab small{display:block;color:var(--ink-soft);font-size:13px;line-height:1.3}
+.rowi.col{flex-direction:column;align-items:stretch}
+.rowi button.link{border:0;background:none;color:var(--wood);font-weight:800;padding:8px 0;text-align:left;min-height:40px}
+.sw{position:relative;width:52px;height:32px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;border-radius:99px;background:#d5ccb8;transition:background .2s}
+.sw span::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 4px #0004;transition:transform .2s}
+.sw input:checked+span{background:var(--green-ok)}
+.sw input:checked+span::after{transform:translateX(20px)}
+.sw input:focus-visible+span{outline:3px solid var(--gold);outline-offset:2px}
+.seg{display:flex;background:#e9e1cd;border-radius:11px;padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{flex:1;border:0;background:none;border-radius:9px;min-height:36px;padding:4px 10px;font-weight:700;font-size:14.5px;color:var(--ink)}
+.seg button.on{background:#fff;box-shadow:0 1px 3px #0003}
+.stepper{display:flex;align-items:center;gap:6px;flex:none}
+.stepper button{width:38px;height:38px;border:0;border-radius:10px;background:#e9e1cd;font-size:20px;font-weight:800;color:var(--ink)}
+.stepper output{min-width:66px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+.stakes{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.stake{border:0;border-radius:14px;padding:10px 12px;text-align:left;background:#f6f0e2;box-shadow:inset 0 0 0 1px #00000020;min-height:64px}
+.stake b{display:block;font-size:15px}
+.stake span{font-size:13px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.stake.on{background:var(--wood);color:var(--paper);box-shadow:none}
+.stake.on span{color:#f2dfbd}
+.bal{font-size:42px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--wood);line-height:1.1}
+.bal.neg{color:var(--red)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:6px}
+.stats div{background:#fff;border-radius:12px;padding:8px 12px}
+.stats b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12.5px;color:var(--ink-soft)}
+.deckgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:10px}
+.dslot{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--ink-soft)}
+.dslot .card{--w:72px}
+.dslot.own .card{box-shadow:0 0 0 2px var(--green-ok),0 2px 6px #0006}
+.ladder{display:flex;flex-wrap:wrap;gap:5px;align-items:flex-end}
+.ladder .card{--w:calc(var(--cw) * .66)}
+kbd{font-family:inherit;font-weight:800;background:var(--paper-2);border-radius:4px;padding:0 4px}
+.credit{font-size:12px;color:var(--ink-soft);margin-top:14px}
+
+@media (max-height:500px) and (orientation:landscape){
+  :root{--hw: clamp(46px, min(13vw, 21vh), 110px); --cw: clamp(36px, 12vh, 80px)}
+  #seat1,#seat3{top:12%}
+  #ginfo{min-height:24px;padding-block:2px;font-size:13px}
+  #handHint{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .fly,.panel,.shake{animation:none}
+  .slot>div,#hand .card,.bubble{transition:none}
+}
+</style>
+
+<div id="app">
+  <header id="bar">
+    <div id="brand">Schafkopf</div>
+    <button id="wallet" aria-label="Spielgeld und Einsatz"><span class="coin"></span><span id="walBal">50,00 €</span><span class="stk" id="walStk"></span></button>
+    <div class="spacer"></div>
+    <button class="ib" id="bTip" aria-label="Tipp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg><span class="t">Tipp</span></button>
+    <button class="ib" id="bLast" aria-label="Letzter Stich"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="7" y="3" width="11" height="15" rx="2"/><path d="M4 7v12a2 2 0 0 0 2 2h9"/></svg><span class="t">Letzter Stich</span></button>
+    <button class="ib" id="bMenu" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="t">Menü</span></button>
+  </header>
+  <div id="ginfo"></div>
+  <main id="table">
+    <div class="seat" id="seat2"><div class="plate"></div><div class="cards"></div><div class="bubble"></div></div>
+    <div class="seat" id="seat1"><div class="plate"></div><div class="cards"></div><div class="bubble"></div></div>
+    <div class="seat" id="seat3"><div class="plate"></div><div class="cards"></div><div class="bubble"></div></div>
+    <div class="trick" id="trick"></div>
+    <div id="msg"></div>
+    <div id="panel" class="panel" hidden></div>
+  </main>
+  <section id="me">
+    <div class="bubble"></div>
+    <div class="plate" id="plate0"></div>
+    <div id="hand"></div>
+    <div id="handHint"></div>
+  </section>
+</div>
+<div id="modal" hidden><div class="sheet" id="sheet"></div></div>
+<input type="file" id="filePick" accept="image/*" hidden>
+<input type="file" id="filePickMulti" accept="image/*" multiple hidden>
+
+<script>
+"use strict";
+/* ================= Grunddaten ================= */
+const SUITS=['E','G','H','S'];
+const SORT_SUITS=['E','G','H','S'];
+const SN={E:'Eichel',G:'Gras',H:'Herz',S:'Schellen'};
+const ORDER=['A','10','K','O','U','9','8','7'];
+const PTS={A:11,'10':10,K:4,O:3,U:2,'9':0,'8':0,'7':0};
+const RNAME={A:'Sau','10':'Zehn',K:'König',O:'Ober',U:'Unter','9':'Neun','8':'Acht','7':'Sieben'};
+const NAMES=['Du','Sepp','Resi','Franz'];
+const RANKOF={sauspiel:1,bettel:2,solo:3,wenz:3,geier:3,farbwenz:3,farbgeier:3,ramsch:0};
+const ABORT={abort:true};
+const $=s=>document.querySelector(s);
+const COARSE=matchMedia('(pointer:coarse)').matches;
+
+const STAKES=[
+  {k:'s5',n:'Pfennigfuchser',sau:5,solo:20},
+  {k:'s10',n:'Stammtisch',sau:10,solo:50},
+  {k:'s20',n:'Wirtshaus',sau:20,solo:100},
+  {k:'s50',n:'Feierabend',sau:50,solo:250},
+  {k:'s100',n:'Kini',sau:100,solo:500}];
+const DEF={kurz:false,wenz:true,geier:false,farbwenz:false,farbgeier:false,bettel:false,tout:true,ramsch:false,
+  klopfen:true,kontra:true,stake:'s10',tSau:10,tSolo:50,tSchn:10,tLauf:10,laufOU:3,laufWG:2,
+  speed:'normal',hints:true,markTrumps:true,open:false,showPts:false,confirm:COARSE,ownDeck:true,startMoney:5000};
+
+const LS={get(k,d){try{const v=localStorage.getItem('schafkopf.'+k);return v?JSON.parse(v):d}catch(e){return d}},
+          set(k,v){try{localStorage.setItem('schafkopf.'+k,JSON.stringify(v))}catch(e){}}};
+let settings=Object.assign({},DEF,LS.get('settings',{}));
+let totals=LS.get('totals',[0,0,0,0]);
+let history=LS.get('history',[]);
+let dealer=LS.get('dealer',3);
+let wallet=Object.assign({bal:settings.startMoney,rebuys:0,games:0,won:0,best:0,worst:0},LS.get('wallet',{}));
+function saveAll(){LS.set('settings',settings);LS.set('totals',totals);LS.set('history',history);LS.set('dealer',dealer);LS.set('wallet',wallet);}
+
+let S=null, gen=0, AIR='';
+let DECK=[];
+function deckRanks(){return settings.kurz?['A','10','K','O','U','9']:ORDER;}
+function buildDeck(){DECK=[];for(const s of SUITS)for(const r of deckRanks())DECK.push({s,r,id:s+r});}
+const fromId=id=>({s:id[0],r:id.slice(1),id});
+function speedF(){return ({slow:1.7,normal:1,fast:.45}[settings.speed]||1);}
+function sleep(ms){const g=gen;return new Promise((res,rej)=>setTimeout(()=>g===gen?res():rej(ABORT),ms*speedF()));}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const minBy=(a,f)=>a.reduce((x,y)=>f(y)<f(x)?y:x);
+const maxBy=(a,f)=>a.reduce((x,y)=>f(y)>f(x)?y:x);
+const cname=c=>`${SN[c.s]}-${RNAME[c.r]}`;
+function money(ct,sign=true){const v=(Math.abs(ct)/100).toFixed(2).replace('.',',')+' €';return (sign?(ct>0?'+':ct<0?'−':''):(ct<0?'−':''))+v;}
+
+/* ================= Kartenbilder im bayerischen Stil ================= */
+const SYM={
+E:`<path d="M10 27c5 8 13 7 16 0" stroke="#17702f" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+<path d="M-11 6V-18a11 11 0 0 1 22 0V6z" fill="#f4c514"/><path d="M0-29a11 11 0 0 1 11 11V6H0z" fill="#d8262a"/>
+<path d="M2.5-26V5M5.5-24.5V5M8.5-21V5" stroke="#8f1012" stroke-width=".9"/>
+<path d="M-11 6V-18a11 11 0 0 1 22 0V6z" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+<rect x="-12" y="4.5" width="24" height="3.6" fill="#1a1a1a"/><rect x="-12" y="8.1" width="24" height="2.6" fill="#35a3e3" stroke="#1a1a1a" stroke-width=".6"/>
+<path d="M-21 18c0-6 9-7.5 21-7.5s21 1.5 21 7.5-9 10-21 10-21-4-21-10z" fill="#21963f" stroke="#102414" stroke-width="1.5"/>
+<path d="M-13 15.5q2.2 4 0 7.5M-4.5 14.5q2.2 4.5 0 9M4.5 14.5q2.2 4.5 0 9M13 15.5q2.2 4 0 7.5" stroke="#0d0d0d" stroke-width="2.6" stroke-linecap="round" fill="none"/>`,
+G:`<path d="M0 16c0 7 2 11 7 14" stroke="#10301a" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+<path d="M0-30C13-19 26-7 24 7c-1 11-12 16-24 11-12 5-23 0-24-11C-26-7-13-19 0-30z" fill="#35a845"/>
+<path d="M0-30C13-19 26-7 24 7c-1 11-12 16-24 11z" fill="#1f7f31"/>
+<path d="M4-22l3 4M8-16l4 5M12-10l5 5M15-3l5 4M15 5l5 3M10 11l4 2" stroke="#0e4a1b" stroke-width="1"/>
+<path d="M0-30C13-19 26-7 24 7c-1 11-12 16-24 11-12 5-23 0-24-11C-26-7-13-19 0-30z" fill="none" stroke="#10301a" stroke-width="1.5"/>
+<path d="M0-25V17M0-12l-9-7M0-12l9-7M0 1l-13-8M0 1l13-8" stroke="#0e3b16" stroke-width="1.5" fill="none" stroke-linecap="round"/>`,
+H:`<path d="M0-17C2-23 6-27 11-27c8 0 14 6 14 16C25 2 14 13 0 27-14 13-25 2-25-11c0-10 6-16 14-16 5 0 9 4 11 10z" fill="#e2282f"/>
+<path d="M0-17C2-23 6-27 11-27c8 0 14 6 14 16C25 2 14 13 0 27z" fill="#b5121b"/>
+<path d="M4-20v34M8-23v32M12-24v28M16-23v22M20-20v14" stroke="#7d0a10" stroke-width=".9"/>
+<path d="M0-17C2-23 6-27 11-27c8 0 14 6 14 16C25 2 14 13 0 27-14 13-25 2-25-11c0-10 6-16 14-16 5 0 9 4 11 10z" fill="none" stroke="#3f0808" stroke-width="1.5"/>
+<path d="M-17-14c-2 4-1 8 1 11" stroke="#ffffffaa" stroke-width="3" fill="none" stroke-linecap="round"/>`,
+S:`<circle cx="0" cy="-22" r="4.2" fill="none" stroke="#1a1a1a" stroke-width="2.2"/>
+<circle cx="0" cy="2" r="22" fill="#f4c514"/><path d="M0-20a22 22 0 0 1 0 44z" fill="#d8262a"/>
+<path d="M4-19.5v43M8-18.5v41M12-16.5v37M16-13v30M20-8v20" stroke="#8f1012" stroke-width=".9"/>
+<circle cx="0" cy="2" r="22" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+<rect x="-21.7" y="-3.5" width="43.4" height="4.2" fill="#1a1a1a"/><rect x="-21.9" y=".7" width="43.8" height="2.6" fill="#35a3e3" stroke="#1a1a1a" stroke-width=".5"/>
+<circle cx="0" cy="13" r="3.4" fill="#1a1a1a"/><path d="M0 13v10.5" stroke="#1a1a1a" stroke-width="2.6"/>
+<path d="M-14-11c-3 3-4 6-4 9" stroke="#ffffffaa" stroke-width="3" fill="none" stroke-linecap="round"/>`};
+const COAT={E:['#1f8a3e','#13612a'],G:['#2b62b3','#1b4687'],H:['#c8262c','#93161b'],S:['#d38a17','#9c6208']};
+const HAIR={K:'#a8722e',O:'#c27a33',U:'#8a5426'};
+const pipG=(s,x,y,k,rot=0)=>`<g transform="translate(${x} ${y}) rotate(${rot}) scale(${k})">${SYM[s]}</g>`;
+function figureSVG(s,r){
+  const [c1,c2]=COAT[s], hair=HAIR[r], skin='#f4d0ab';
+  let o='';
+  // Unterkörper und Mantel
+  o+=`<path d="M56 298 64 172q4-30 32-40h44q28 10 32 40l8 126z" fill="${c1}" stroke="#1a1a1a" stroke-width="1.6"/>`;
+  o+=`<path d="M140 132q28 10 32 40l8 126h-30l-4-120z" fill="${c2}" opacity=".55"/>`;
+  o+=`<path d="M78 180v110M90 170v120M150 175v115M162 185v105" stroke="#00000033" stroke-width="1.2"/>`;
+  o+=`<path d="M118 134l-4 164" stroke="#1a1a1a" stroke-width="1.6"/>`;
+  for(const y of [158,182,206,230,254]) o+=`<circle cx="${121-((y-134)/164)*4}" cy="${y}" r="3.2" fill="#e8b829" stroke="#6d4c06"/>`;
+  o+=`<rect x="61" y="214" width="114" height="11" fill="#4a2c12" stroke="#1a1a1a"/><rect x="108" y="212" width="16" height="15" rx="2" fill="#e8b829" stroke="#6d4c06"/>`;
+  // Arme
+  o+=`<path d="M72 150q-14 30-6 82l18 2q-4-44 10-74z" fill="${c1}" stroke="#1a1a1a" stroke-width="1.6"/>`;
+  o+=`<path d="M164 150q16 26 12 64l-18 2q2-34-8-58z" fill="${c2}" stroke="#1a1a1a" stroke-width="1.6"/>`;
+  o+=`<path d="M64 228h22v8H64zM158 212h20v8h-20z" fill="#e8b829" stroke="#6d4c06"/>`;
+  o+=`<circle cx="75" cy="244" r="8.5" fill="${skin}" stroke="#1a1a1a" stroke-width="1.3"/><circle cx="168" cy="228" r="8.5" fill="${skin}" stroke="#1a1a1a" stroke-width="1.3"/>`;
+  // Hals, Kragen
+  o+=`<path d="M110 112h16v22h-16z" fill="${skin}" stroke="#1a1a1a" stroke-width="1.2"/>`;
+  if(r==='K') o+=`<path d="M86 136q32-14 64 0l-6 16q-26-10-52 0z" fill="#fff" stroke="#1a1a1a" stroke-width="1.4"/><path d="M96 141l2 3M108 138l2 3M122 138l2 3M136 141l2 3" stroke="#111" stroke-width="2.4"/>`;
+  else if(r==='O') o+=`<path d="M96 132l22 14 22-14-4 10-18 12-18-12z" fill="#fff" stroke="#1a1a1a" stroke-width="1.3"/>`;
+  else o+=`<path d="M108 132h20l-4 10 6 14-12-6-12 6 6-14z" fill="#5cb7ea" stroke="#1a1a1a" stroke-width="1.3"/>`;
+  // Haare hinten, Kopf, Gesicht
+  o+=`<path d="M95 94q-4-36 23-36t23 36q4 22-6 34 2-18-4-30-13-8-26 0-6 12-4 30-10-12-6-34z" fill="${hair}" stroke="#1a1a1a" stroke-width="1.3"/>`;
+  o+=`<ellipse cx="118" cy="93" rx="19" ry="23" fill="${skin}" stroke="#1a1a1a" stroke-width="1.4"/>`;
+  o+=`<path d="M100 82q18-16 36 0q-6-14-18-14t-18 14z" fill="${hair}" stroke="#1a1a1a" stroke-width="1.1"/>`;
+  o+=`<path d="M106 86q4-3 8 0M122 86q4-3 8 0" stroke="#3a2410" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+  o+=`<circle cx="110" cy="91" r="1.9" fill="#1a1a1a"/><circle cx="126" cy="91" r="1.9" fill="#1a1a1a"/>`;
+  o+=`<path d="M118 93l-3 10h5" stroke="#8a5a3a" stroke-width="1.4" fill="none"/><path d="M112 108q6 3 12 0" stroke="#a3332f" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  o+=`<circle cx="106" cy="101" r="4" fill="#ef9a8c" opacity=".5"/><circle cx="130" cy="101" r="4" fill="#ef9a8c" opacity=".5"/>`;
+  if(r==='K'){
+    o+=`<path d="M100 104q2 22 18 22t18-22q-6 8-18 8t-18-8z" fill="${hair}" stroke="#1a1a1a" stroke-width="1.2"/>`;
+    o+=`<path d="M98 72l2-24 9 13 9-17 9 17 9-13 2 24z" fill="#efc12a" stroke="#6d4c06" stroke-width="1.5"/><circle cx="118" cy="62" r="3" fill="#d8262a"/><circle cx="105" cy="66" r="2.3" fill="#35a3e3"/><circle cx="131" cy="66" r="2.3" fill="#35a3e3"/>`;
+    o+=`<path d="M170 290 178 116" stroke="#b88a14" stroke-width="7" stroke-linecap="round"/><path d="M170 290 178 116" stroke="#f2cf55" stroke-width="3"/><circle cx="178" cy="110" r="8" fill="#efc12a" stroke="#6d4c06" stroke-width="1.5"/>`;
+    o+=`<path d="M70 150l100 70" stroke="#5cb7ea" stroke-width="12" opacity=".85"/>`;
+    o+=pipG(s,52,52,.7);
+  }else if(r==='O'){
+    o+=`<path d="M92 76q26-24 54 0q-26-8-54 0z" fill="#2a2a2a" stroke="#1a1a1a"/><path d="M134 66q22-24 30-6-14-2-26 10z" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>`;
+    o+=`<path d="M60 296 150 168" stroke="#666" stroke-width="7" stroke-linecap="round"/><path d="M60 296 150 168" stroke="#d9d9d9" stroke-width="3"/><path d="M138 170l20 14M146 168l4 10" stroke="#b88a14" stroke-width="5" stroke-linecap="round"/>`;
+    o+=pipG(s,58,62,1.05);
+  }else{
+    o+=`<path d="M98 76q20-14 40 0v-6q-20-12-40 0z" fill="#3b2a1a" stroke="#1a1a1a"/>`;
+    o+=`<path d="M152 228l26-10" stroke="#1a1a1a" stroke-width="1"/>`;
+    o+=pipG(s,58,262,1.05,180);
+  }
+  return o;
+}
+function numberSVG(s,r){
+  const L={'7':[[62,155,248],[108]],'8':[[62,155,248],[108,202]],'9':[[52,120,190,258],[155]],'10':[[52,120,190,258],[86,224]]}[r];
+  let o=`<path d="M106 34V276" stroke="#c4302b" stroke-width="2.2"/><path d="M98 34q8-10 16 0M98 276q8 10 16 0" stroke="#d9a51c" stroke-width="3" fill="none"/>`;
+  for(const x of [64,148]) for(const y of L[0]) o+=pipG(s,x,y,.8,y>160?180:0);
+  for(const y of L[1]) o+=pipG(s,106,y,.8,y>160?180:0);
+  if(r==='10') o+=`<text x="106" y="160" font-family="Georgia,serif" font-weight="700" font-size="24" text-anchor="middle" fill="#1a1a1a" stroke="#fdfaf2" stroke-width="4" paint-order="stroke">X</text>`;
+  return o;
+}
+function sauSVG(s){
+  let o='';
+  for(let i=0;i<9;i++){
+    const a=(200+i*16)*Math.PI/180, b=(-20-i*16)*Math.PI/180;
+    const lx=106+70*Math.cos(a), ly=170+92*Math.sin(a);
+    const rx=212-lx;
+    o+=`<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="9" ry="4.5" transform="rotate(${(i*16+110).toFixed(0)} ${lx.toFixed(1)} ${ly.toFixed(1)})" fill="#2f8f3e" stroke="#123" stroke-width=".8"/>`;
+    o+=`<ellipse cx="${rx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="9" ry="4.5" transform="rotate(${(-i*16-110).toFixed(0)} ${rx.toFixed(1)} ${ly.toFixed(1)})" fill="#2f8f3e" stroke="#123" stroke-width=".8"/>`;
+  }
+  o+=`<path d="M60 262q46-22 92 0l-6 14q-40-16-80 0z" fill="#e8c35a" stroke="#6d4c06" stroke-width="1.4"/><text x="106" y="269" font-family="Georgia,serif" font-weight="700" font-size="13" text-anchor="middle" fill="#4a2e0a">SAU</text>`;
+  o+=`<path d="M86 64l3-22 8 11 9-15 9 15 8-11 3 22z" fill="#efc12a" stroke="#6d4c06" stroke-width="1.5"/><circle cx="106" cy="54" r="3" fill="#d8262a"/>`;
+  o+=pipG(s,106,160,2.25,-12);
+  return o;
+}
+function cardSVG(c){
+  const {s,r}=c;
+  let body;
+  if(r==='A') body=sauSVG(s);
+  else if(r==='K'||r==='O'||r==='U') body=figureSVG(s,r);
+  else body=numberSVG(s,r);
+  const lab={A:'A','10':'10',K:'K',O:'O',U:'U','9':'9','8':'8','7':'7'}[r];
+  const fs=r==='10'?17:22;
+  const corner=`<text x="0" y="0" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="${fs}" text-anchor="middle" fill="#111">${lab}</text>${pipG(s,0,15,.3)}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 310"><rect x="0" y="0" width="200" height="310" rx="14" fill="#fffdf7"/>`+
+    `<clipPath id="f"><rect x="25" y="12" width="162" height="286" rx="3"/></clipPath><g clip-path="url(#f)">${body}</g>`+
+    `<rect x="25" y="12" width="162" height="286" rx="3" fill="none" stroke="#1a1a1a" stroke-width="1.3"/>`+
+    `<g transform="translate(12.5 30)">${corner}</g><g transform="translate(187.5 280) rotate(180)">${corner}</g>`+
+    `<rect x=".6" y=".6" width="198.8" height="308.8" rx="14" fill="none" stroke="#00000030" stroke-width="1.2"/></svg>`;
+}
+const IMGCACHE={}, OWN={};
+function drawnSrc(id){return IMGCACHE[id]||(IMGCACHE[id]='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(cardSVG(fromId(id))));}
+function cardSrc(id){return (settings.ownDeck&&OWN[id])||drawnSrc(id);}
+function suitIcon(s){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -34 60 68">${SYM[s]}</svg>`);}
+
+/* ===== Eigenes Kartenblatt (Fotos), lokal in IndexedDB ===== */
+const IDB={db:null,
+  open(){return new Promise(res=>{try{const r=indexedDB.open('schafkopf',1);r.onupgradeneeded=()=>r.result.createObjectStore('deck');r.onsuccess=()=>{this.db=r.result;res(true)};r.onerror=()=>res(false);}catch(e){res(false)}});},
+  async all(){if(!this.db&&!(await this.open()))return {};return new Promise(res=>{try{const tx=this.db.transaction('deck');const st=tx.objectStore('deck');const out={};const rq=st.openCursor();rq.onsuccess=()=>{const c=rq.result;if(c){out[c.key]=c.value;c.continue();}else res(out);};rq.onerror=()=>res({});}catch(e){res({})}});},
+  async put(k,v){if(!this.db&&!(await this.open()))return false;return new Promise(res=>{try{const tx=this.db.transaction('deck','readwrite');v===null?tx.objectStore('deck').delete(k):tx.objectStore('deck').put(v,k);tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);}catch(e){res(false)}});}};
+async function loadOwnDeck(){const a=await IDB.all();for(const k of Object.keys(OWN))delete OWN[k];Object.assign(OWN,a);if(S)renderAll();}
+function processImage(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), im=new Image();
+    im.onload=()=>{
+      let w=im.naturalWidth,h=im.naturalHeight,rot=w>h*1.08;
+      const sw=rot?h:w, sh=rot?w:h, ratio=1.55;
+      let cw=sw,ch=sw*ratio; if(ch>sh){ch=sh;cw=sh/ratio;}
+      const W=360,H=Math.round(W*ratio), cv=document.createElement('canvas');cv.width=W;cv.height=H;
+      const g=cv.getContext('2d');
+      g.save();
+      if(rot){g.translate(W,0);g.rotate(Math.PI/2);g.scale(H/ch,W/cw);g.drawImage(im,(w-ch)/2,(h-cw)/2,ch,cw,0,0,ch,cw);}
+      else{g.scale(W/cw,H/ch);g.drawImage(im,(w-cw)/2,(h-ch)/2,cw,ch,0,0,cw,ch);}
+      g.restore();URL.revokeObjectURL(url);res(cv.toDataURL('image/jpeg',.86));
+    };
+    im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Bild konnte nicht gelesen werden'));};
+    im.src=url;
+  });
+}
+function matchName(name){
+  const n=name.toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/ü/g,'ue').replace(/ö/g,'oe').replace(/ä/g,'ae');
+  let s=null;
+  if(/eichel|acorn/.test(n))s='E';else if(/gras|gruen|laub|blatt|leaf|green/.test(n))s='G';else if(/herz|heart|rot/.test(n))s='H';else if(/schell|bell/.test(n))s='S';
+  const t=n.split(/[^a-z0-9]+/);
+  let r=null;
+  if(/sau|ass\b|ace|daus/.test(n)||t.includes('a'))r='A';
+  else if(/zehn|\b10\b/.test(n)||t.includes('10'))r='10';
+  else if(/koenig|king/.test(n)||t.includes('k'))r='K';
+  else if(/ober/.test(n)||t.includes('o'))r='O';
+  else if(/unter/.test(n)||t.includes('u'))r='U';
+  else if(/neun/.test(n)||t.includes('9'))r='9';
+  else if(/acht/.test(n)||t.includes('8'))r='8';
+  else if(/sieben/.test(n)||t.includes('7'))r='7';
+  if(!s){const m=t.find(x=>/^[eghs]$/.test(x));if(m)s=m.toUpperCase();}
+  return s&&r?s+r:null;
+}
+
+/* ================= Spielarten ================= */
+function makeGame(d){
+  const g=Object.assign({},d), ranks=deckRanks();
+  const OS=SUITS.map(s=>s+'O'), US=SUITS.map(s=>s+'U');
+  const suitCards=(s,ex)=>ORDER.filter(r=>ranks.includes(r)&&!ex.includes(r)).map(r=>s+r);
+  let tr=[];
+  switch(d.type){
+    case 'sauspiel': case 'ramsch': tr=[...OS,...US,...suitCards('H',['O','U'])];break;
+    case 'solo': tr=[...OS,...US,...suitCards(d.suit,['O','U'])];break;
+    case 'wenz': tr=US;break;
+    case 'farbwenz': tr=[...US,...suitCards(d.suit,['U'])];break;
+    case 'geier': tr=OS;break;
+    case 'farbgeier': tr=[...OS,...suitCards(d.suit,['O'])];break;
+    default: tr=[];
+  }
+  g.trumps=tr; g.ti=new Map(tr.map((id,i)=>[id,i]));
+  const ord=d.type==='bettel'?['A','K','O','U','10','9','8','7']:ORDER;
+  g.si=new Map();
+  for(const s of SUITS){let i=0;for(const r of ord){if(ranks.includes(r)&&!g.ti.has(s+r))g.si.set(s+r,i++);}}
+  return g;
+}
+function gameLabel(g){
+  if(g.sie) return 'Sie';
+  const t=g.tout?' Tout':'';
+  switch(g.type){
+    case 'sauspiel': return `Sauspiel auf die ${SN[g.called]}-Sau`;
+    case 'solo': return `${SN[g.suit]}-Solo${t}`;
+    case 'wenz': return `Wenz${t}`;
+    case 'geier': return `Geier${t}`;
+    case 'farbwenz': return `${SN[g.suit]}-Wenz${t}`;
+    case 'farbgeier': return `${SN[g.suit]}-Geier${t}`;
+    case 'bettel': return 'Bettel';
+    case 'ramsch': return 'Ramsch';
+  }
+  return '';
+}
+function announceText(g){
+  const nick={E:'die Alte',G:'die Blaue',S:'die Schelln'};
+  if(g.type==='sauspiel') return `Auf ${nick[g.called]}!`;
+  return `I spui ${gameLabel(g)}!`;
+}
+const declRank=d=>d.sie?9:(d.tout?4:RANKOF[d.type]);
+const isT=(c,g=S.game)=>g.ti.has(c.id);
+const eff=(c,g=S.game)=>g.ti.has(c.id)?'T':c.s;
+function power(c,lead,g=S.game){if(g.ti.has(c.id))return 1000-g.ti.get(c.id);if(c.s===lead)return 100-g.si.get(c.id);return -1;}
+function trickWinnerIdx(tr,g=S.game){const lead=eff(tr[0].c,g);let b=0;for(let i=1;i<tr.length;i++)if(power(tr[i].c,lead,g)>power(tr[b].c,lead,g))b=i;return b;}
+function sortHand(h,g=S.game){
+  const key=c=>g.ti.has(c.id)?g.ti.get(c.id):100+SORT_SUITS.indexOf(c.s)*20+g.si.get(c.id);
+  h.sort((a,b)=>key(a)-key(b));
+}
+function callable(hand){
+  return ['E','G','S'].filter(s=>!hand.some(c=>c.id===s+'A')&&hand.some(c=>c.s===s&&c.r!=='O'&&c.r!=='U'));
+}
+
+/* ================= Regeln: erlaubte Karten ================= */
+function rules(p){
+  const hand=S.hands[p], g=S.game, tr=S.trick, why={};
+  const ruf=g.type==='sauspiel'?g.called:null, sauId=ruf?ruf+'A':null;
+  const restricted=ruf&&hand.some(c=>c.id===sauId)&&!S.davon;
+  const runN=settings.kurz?3:4;
+  if(!tr.length){
+    if(restricted){
+      const rc=hand.filter(c=>eff(c)===ruf);
+      if(rc.length<runN) for(const c of rc) if(c.id!==sauId)
+        why[c.id]=`Du hast die gerufene Sau: Die Ruffarbe darfst du nur mit der Sau ausspielen. Davonlaufen geht erst ab ${runN} Karten dieser Farbe.`;
+    }
+  }else{
+    const lead=eff(tr[0].c);
+    const fol=hand.filter(c=>eff(c)===lead);
+    if(fol.length){
+      for(const c of hand) if(eff(c)!==lead)
+        why[c.id]=lead==='T'?'Trumpf ist ausgespielt: Du musst Trumpf zugeben.':`${SN[lead]} ist ausgespielt: Du musst Farbe bekennen.`;
+      if(restricted&&lead===ruf) for(const c of fol) if(c.id!==sauId)
+        why[c.id]='Die Ruffarbe ist gesucht: Du musst die gerufene Sau zugeben.';
+    }else if(restricted&&hand.length>1){
+      why[sauId]='Die gerufene Sau darfst du nicht abwerfen (erst im letzten Stich).';
+    }
+  }
+  return {legal:hand.filter(c=>!why[c.id]),why};
+}
+function applyCard(p,c){
+  const g=S.game;
+  S.hands[p]=S.hands[p].filter(x=>x.id!==c.id);
+  if(S.trick.length){
+    const lead=eff(S.trick[0].c); if(eff(c)!==lead) S.voids[p][lead]=true;
+  }else{
+    const e=eff(c); S.ledCount[e]=(S.ledCount[e]||0)+1;
+    if(g.type==='sauspiel'&&e===g.called){
+      S.rufLed=true;
+      if(c.id!==g.called+'A'&&S.hands[p].some(x=>x.id===g.called+'A')){S.davon=true;S.justRan=p;}
+    }
+  }
+  if(g.type==='sauspiel'&&c.id===g.called+'A'&&!S.revealed){S.revealed=true;S.justRevealed=p;}
+  S.trick.push({p,c}); S.played.add(c.id);
+}
+
+/* ================= Wissen der Computerspieler ================= */
+function relation(p,q){
+  if(p===q) return 1;
+  const g=S.game;
+  if(g.type==='ramsch') return -1;
+  if(g.type!=='sauspiel'||S.revealed) return S.team[p]===S.team[q]?1:-1;
+  const holder=S.start[p].some(c=>c.id===g.called+'A');
+  if(p===g.player) return 0;
+  if(holder) return q===g.player?1:-1;
+  return q===g.player?-1:0;
+}
+function unseen(p){const h=new Set(S.hands[p].map(c=>c.id));return DECK.filter(c=>!S.played.has(c.id)&&!h.has(c.id));}
+function canBeBeaten(p,card,lead,foes){
+  if(!foes.length) return false;
+  const pc=power(card,lead);
+  for(const u of unseen(p)){
+    if(power(u,lead)<=pc) continue;
+    const e=eff(u);
+    if(foes.some(q=>!S.voids[q][e])) return true;
+  }
+  return false;
+}
+function isTop(p,c){const e=eff(c);return !unseen(p).some(u=>eff(u)===e&&power(u,e)>power(c,e));}
+function strength(c){const g=S.game;return g.ti.has(c.id)?10+(g.trumps.length-g.ti.get(c.id))*2:(8-g.si.get(c.id))*.5;}
+const cost=c=>PTS[c.r]+strength(c);
+function discardCost(p,c){let v=cost(c);if(!isT(c)){const n=S.hands[p].filter(x=>!isT(x)&&x.s===c.s).length;if(n===1&&c.r!=='A')v-=1.5;}return v;}
+const R=(c,why)=>{AIR=why;return c;};
+
+/* ================= Computer: Karte wählen ================= */
+function aiPlay(p){
+  const L=rules(p).legal;
+  if(L.length===1) return R(L[0],'Nur diese Karte ist erlaubt.');
+  const t=S.game.type;
+  if(t==='bettel') return aiBettel(p,L);
+  if(t==='ramsch') return aiRamsch(p,L);
+  return S.trick.length?aiFollow(p,L):aiLead(p,L);
+}
+function aiLead(p,L){
+  const g=S.game, me=S.team[p], hand=S.hands[p];
+  const T=L.filter(c=>isT(c)), N=L.filter(c=>!isT(c));
+  const unT=unseen(p).filter(u=>isT(u)).length;
+  const fresh=N.filter(c=>c.r==='A'&&!S.ledCount[c.s]);
+  const sideLen=s=>hand.filter(x=>!isT(x)&&x.s===s).length;
+  if(me){
+    if(T.length&&unT>0){
+      const hi=maxBy(T,c=>power(c,'T'));
+      if(isTop(p,hi)) return R(hi,'Höchster Trumpf im Spiel: Trumpf ziehen, damit den Gegnern die Trümpfe ausgehen.');
+      if(g.type==='sauspiel'&&p!==g.player) return R(hi,'Als Partner Trumpf spielen, um den Spieler zu unterstützen.');
+      if(T.length>=2||g.type!=='sauspiel') return R(minBy(T,cost),'Mit einem kleinen Trumpf die hohen Trümpfe der Gegner herauslocken.');
+    }
+    if(T.length&&unT===0) return R(maxBy(T,c=>power(c,'T')),'Die Gegner haben keinen Trumpf mehr: Dein Trumpf sticht sicher.');
+    if(fresh.length) return R(minBy(fresh,c=>sideLen(c.s)),'Die Sau einer noch ungespielten Farbe holt meist den Stich.');
+    const tops=N.filter(c=>isTop(p,c));
+    if(tops.length) return R(maxBy(tops,c=>PTS[c.r]),'Diese Karte ist in ihrer Farbe die höchste, die noch im Spiel ist.');
+    return R(minBy(L,c=>discardCost(p,c)),'Eine billige Karte abgeben, die wenig Augen kostet.');
+  }
+  if(g.type==='sauspiel'&&!S.rufLed){
+    const rc=N.filter(c=>c.s===g.called);
+    if(rc.length) return R(minBy(rc,c=>PTS[c.r]),'Rufsau suchen: Spiel die Ruffarbe an, dann muss der Partner seine Sau zugeben.');
+  }
+  if(fresh.length) return R(minBy(fresh,c=>sideLen(c.s)),'Die Sau einer frischen Farbe anspielen, solange sie noch nicht gestochen werden kann.');
+  const tops=N.filter(c=>isTop(p,c));
+  if(tops.length) return R(tops[0],'Diese Karte ist in ihrer Farbe die höchste, die noch im Spiel ist.');
+  if(N.length) return R(minBy(N,c=>discardCost(p,c)),'Als Gegenspieler lieber Farbe statt Trumpf anspielen und billig bleiben.');
+  return R(minBy(T,cost),'Nur noch Trümpfe: den billigsten nehmen.');
+}
+function aiFollow(p,L){
+  const tr=S.trick, lead=eff(tr[0].c), wi=trickWinnerIdx(tr), w=tr[wi].p, wc=tr[wi].c;
+  const tp=tr.reduce((s,x)=>s+PTS[x.c.r],0);
+  const after=[];for(let k=tr.length+1;k<4;k++)after.push((tr[0].p+k)%4);
+  const foes=after.filter(q=>relation(p,q)!==1);
+  const rel=relation(p,w);
+  const beats=c=>power(c,lead)>power(wc,lead);
+  const W=L.filter(beats), NW=L.filter(c=>!beats(c));
+  const cheap=a=>minBy(a,c=>discardCost(p,c));
+  const held=c=>!canBeBeaten(p,c,lead,foes);
+  if(rel===1){
+    if(held(wc)) return R(maxBy(L,c=>PTS[c.r]-(isT(c)?strength(c)*.7:0)),`${w===0?'Du hast':NAMES[w]+' hat'} den Stich sicher und spielt mit dir: Schmieren, also viele Augen dazugeben.`);
+    const sw=W.filter(held);
+    if(sw.length&&tp>=10) return R(minBy(sw,cost),'Der Stich ist wertvoll und dein Mitspieler nicht sicher: sicher übernehmen.');
+    return R(cheap(NW.length?NW:L),'Dein Mitspieler liegt vorn: nicht überstechen, billig zugeben.');
+  }
+  if(W.length){
+    const sw=W.filter(held);
+    if(sw.length){
+      const c=minBy(sw,cost);
+      if(tp>=3||cost(c)<14||(rel===-1&&!foes.length)) return R(c,foes.length?'Mit der billigsten Karte stechen, die nicht mehr überstochen werden kann.':'Du bist als Letzter dran: billig stechen und die Augen holen.');
+    }
+    const ace=W.find(c=>!isT(c)&&c.r==='A'&&!foes.some(q=>S.voids[q][lead])&&(S.ledCount[lead]||0)<=1);
+    if(ace) return R(ace,'Erste Runde dieser Farbe: Die Sau holt den Stich wahrscheinlich.');
+    if(tp>=10&&rel===-1) return R(maxBy(W,c=>power(c,lead)),'Viele Augen im Stich: hoch stechen und hoffen, dass keiner drüber kommt.');
+  }
+  return R(cheap(NW.length?NW:L),'Der Stich ist nicht zu halten: billig abwerfen.');
+}
+function aiRamsch(p,L){
+  const tr=S.trick;
+  if(!tr.length) return R(minBy(L,c=>strength(c)*3+PTS[c.r]*.3),'Ramsch: niedrig anspielen, damit ein anderer den Stich nehmen muss.');
+  const lead=eff(tr[0].c), wc=tr[trickWinnerIdx(tr)].c;
+  const NW=L.filter(c=>power(c,lead)<=power(wc,lead));
+  if(NW.length) return R(maxBy(NW,c=>PTS[c.r]+strength(c)*.8),'Ramsch: Ein anderer nimmt den Stich, also hohe Karten und Augen loswerden.');
+  if(tr.length===3) return R(minBy(L,c=>PTS[c.r]*2+strength(c)*.1),'Ramsch: Du musst stechen, also mit möglichst wenig Augen.');
+  return R(minBy(L,c=>power(c,lead)),'Ramsch: knapp stechen, vielleicht sticht noch einer drüber.');
+}
+function aiBettel(p,L){
+  const g=S.game, tr=S.trick, pl=g.player;
+  const pw=c=>power(c,c.s);
+  if(p===pl){
+    if(!tr.length) return R(minBy(L,pw),'Bettel: die niedrigste Karte anspielen.');
+    const lead=eff(tr[0].c), wc=tr[trickWinnerIdx(tr)].c;
+    const NW=L.filter(c=>power(c,lead)<power(wc,lead));
+    return NW.length?R(maxBy(NW,pw),'Bettel: die höchste Karte spielen, die noch unter dem Stich bleibt.'):R(maxBy(L,pw),'Bettel: Der Stich ist leider nicht zu vermeiden.');
+  }
+  if(!tr.length){const cand=L.filter(c=>!S.voids[pl][c.s]);return R(minBy(cand.length?cand:L,pw),'Gegen Bettel: niedrig anspielen, damit der Spieler drüber muss.');}
+  const lead=eff(tr[0].c), wi=trickWinnerIdx(tr), w=tr[wi].p, wc=tr[wi].c;
+  if(tr.some(x=>x.p===pl)){
+    if(w===pl){const NW=L.filter(c=>power(c,lead)<power(wc,lead));if(NW.length)return R(maxBy(NW,pw),'Der Bettel-Spieler liegt vorn: drunter bleiben, damit er den Stich bekommt.');return R(minBy(L,pw),'Leider musst du drüber.');}
+    return R(maxBy(L,pw),'Der Spieler liegt schon drunter: hohe Karte loswerden.');
+  }
+  return R(minBy(L,pw),'Gegen Bettel: niedrig bleiben, damit der Spieler drüber muss.');
+}
+
+/* ================= Computer: Spiel ansagen ================= */
+function evalOU(hand,ts){
+  const W={EO:4,GO:3.5,HO:3,SO:2.8,EU:2.5,GU:2.3,HU:2.1,SU:2};
+  let sc=0,tc=0;
+  for(const c of hand){
+    if(c.r==='O'||c.r==='U'){sc+=W[c.id];tc++;}
+    else if(c.s===ts){sc+=({A:1.6,'10':1.5,K:1.3}[c.r]||1.1);tc++;}
+    else if(c.r==='A') sc+=1.5;
+    else if(c.r==='10'&&hand.some(x=>x.id===c.s+'A')) sc+=.8;
+  }
+  for(const s of SUITS){if(s===ts)continue;if(!hand.some(c=>c.s===s&&c.r!=='O'&&c.r!=='U'))sc+=.5;}
+  return {sc,tc};
+}
+function evalW(hand,key,ts){
+  const W={E:4,G:3.5,H:3,S:2.8}, ranks=deckRanks();
+  const ord=ORDER.filter(r=>r!==key&&ranks.includes(r));
+  let sc=0,tc=0;
+  for(const c of hand){
+    if(c.r===key){sc+=W[c.s];tc++;}
+    else if(ts&&c.s===ts){sc+=({A:1.6,'10':1.5,K:1.3}[c.r]||1.1);tc++;}
+  }
+  for(const s of SUITS){
+    if(s===ts) continue;
+    const have=new Set(hand.filter(c=>c.s===s&&c.r!==key).map(c=>c.r));
+    let k=0;for(const r of ord){if(have.has(r))k++;else break;}
+    if(k) sc+=2+(k-1)*1.3;
+    if(k&&have.size>=4) sc+=(have.size-3)*.8;
+    if(!have.size&&ts) sc+=.6;
+  }
+  return {sc,tc};
+}
+function toutable(hand,g){
+  const has=new Set(hand.map(c=>c.id));
+  let k=0;for(const id of g.trumps){if(has.has(id))k++;else break;}
+  const tc=hand.filter(c=>g.ti.has(c.id)).length, oppT=g.trumps.length-tc;
+  if(oppT>0&&k<oppT) return false;
+  for(const s of SUITS){
+    const side=[...g.si.entries()].filter(([id])=>id[0]===s).sort((a,b)=>a[1]-b[1]).map(x=>x[0]);
+    const held=side.filter(id=>has.has(id));
+    for(let i=0;i<held.length;i++) if(side[i]!==held[i]) return false;
+  }
+  return true;
+}
+function bettelable(hand){
+  if(hand.some(c=>c.r==='A'||c.r==='K')) return false;
+  const g=makeGame({type:'bettel'});
+  for(const s of SUITS){
+    const side=[...g.si.entries()].filter(([id])=>id[0]===s).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+    const held=side.map((id,pos)=>({id,pos})).filter(x=>hand.some(c=>c.id===x.id));
+    for(let j=0;j<held.length;j++) if(held[j].pos>j*2) return false;
+  }
+  return true;
+}
+function aiDecide(p){
+  const hand=S.hands[p], hs=hand.length<8?.9:1, c=[];
+  for(const s of SUITS){const {sc,tc}=evalOU(hand,s);if(tc>=Math.ceil(5*hs)&&sc>=16*hs)c.push({type:'solo',suit:s,m:sc-16*hs});}
+  if(settings.wenz){const {sc,tc}=evalW(hand,'U',null);if(tc>=2&&sc>=13*hs&&(tc>=3||hand.some(x=>x.id==='EU'||x.id==='GU')))c.push({type:'wenz',m:sc-13*hs});}
+  if(settings.geier){const {sc,tc}=evalW(hand,'O',null);if(tc>=2&&sc>=13*hs&&(tc>=3||hand.some(x=>x.id==='EO'||x.id==='GO')))c.push({type:'geier',m:sc-13*hs});}
+  for(const s of SUITS){
+    if(settings.farbwenz){const {sc,tc}=evalW(hand,'U',s);if(tc>=Math.ceil(5*hs)&&sc>=16*hs)c.push({type:'farbwenz',suit:s,m:sc-16*hs});}
+    if(settings.farbgeier){const {sc,tc}=evalW(hand,'O',s);if(tc>=Math.ceil(5*hs)&&sc>=16*hs)c.push({type:'farbgeier',suit:s,m:sc-16*hs});}
+  }
+  if(settings.tout) for(const x of c) if(toutable(hand,makeGame(x))){x.tout=true;x.m+=20;}
+  if(c.length){const b=maxBy(c,x=>declRank(x)*100+x.m);delete b.m;return b;}
+  if(settings.bettel&&bettelable(hand)) return {type:'bettel'};
+  const {sc,tc}=evalOU(hand,'H'), calls=callable(hand);
+  if(calls.length&&tc>=Math.ceil(4*hs)&&sc>=9.5*hs){
+    const called=minBy(calls,s=>hand.filter(x=>x.s===s&&x.r!=='O'&&x.r!=='U').length*10+(hand.some(x=>x.id===s+'10')?3:0));
+    return {type:'sauspiel',called};
+  }
+  return null;
+}
+function aiKlopf(p){const h=S.hands[p];const {sc,tc}=evalOU(h,'H');return h.length>=4?(tc>=3&&sc>=9.5):(tc>=3&&sc>=8);}
+function aiKontra(q){
+  const g=S.game,h=S.hands[q],hs=h.length/8;
+  if(g.type==='bettel') return false;
+  const tr=h.filter(c=>isT(c)), top4=tr.filter(c=>g.ti.get(c.id)<4).length, aces=h.filter(c=>!isT(c)&&c.r==='A').length;
+  if(g.type==='sauspiel') return (tr.length>=5*hs&&top4>=2&&aces>=1)||(tr.length>=6*hs&&top4>=1);
+  if(g.type==='wenz'||g.type==='geier') return top4>=2&&aces>=2;
+  return tr.length>=4*hs&&top4>=2;
+}
+function aiRe(q){
+  const g=S.game,h=S.hands[q],hs=h.length/8;
+  if(g.type==='bettel') return false;
+  const tr=h.filter(c=>isT(c)), top4=tr.filter(c=>g.ti.get(c.id)<4).length, aces=h.filter(c=>!isT(c)&&c.r==='A').length;
+  if(g.type==='sauspiel') return tr.length>=6*hs&&top4>=2;
+  if(g.type==='wenz'||g.type==='geier') return top4>=3&&aces>=2;
+  return tr.length>=6*hs&&top4>=3;
+}
+
+/* ================= Darstellung ================= */
+function cardHTML(c,cls='',tmark=false){
+  return `<div class="card ${cls}" data-id="${c.id}"><img src="${cardSrc(c.id)}" alt="${cname(c)}" draggable="false">${tmark?'<span class="tmark"></span>':''}</div>`;
+}
+function plateHTML(p){
+  let tag='';
+  if(S&&S.game&&!S.prelim){
+    const g=S.game;
+    if(g.type!=='ramsch'){
+      if(p===g.player) tag='<span class="tag pl">Spieler</span>';
+      else if(S.team[p]&&g.type==='sauspiel'&&(S.revealed||p===0||S.phase==='end')) tag='<span class="tag pa">Partner</span>';
+    }
+  }
+  if(S&&p===S.dealer) tag+='<span class="tag dl">Geber</span>';
+  const n=S?S.won[p].length:0;
+  let pts='';
+  if(S&&(settings.showPts||S.phase==='end')) pts=` · ${S.won[p].flat().reduce((s,c)=>s+PTS[c.r],0)} Augen`;
+  return `<b>${NAMES[p]}</b>${tag}<span class="tk">${n} ${n===1?'Stich':'Stiche'}${pts}</span>`;
+}
+function renderSeats(){
+  for(let p=1;p<4;p++){
+    const el=$('#seat'+p);
+    const open=S&&(settings.open||S.phase==='end');
+    const cs=el.querySelector('.cards');
+    cs.className='cards'+(open?' open':'');
+    cs.innerHTML=S?S.hands[p].map(c=>open?cardHTML(c,'mini'):'<div class="back"></div>').join(''):'';
+    el.querySelector('.plate').innerHTML=plateHTML(p);
+    el.classList.toggle('turn',!!S&&S.turn===p);
+  }
+  const p0=$('#plate0');p0.innerHTML=plateHTML(0);p0.classList.toggle('turn',!!S&&S.turn===0);
+}
+function myTurn(){return !!S&&S.phase==='play'&&S.turn===0&&!!S.humanResolve;}
+function renderHand(){
+  const h=$('#hand');
+  if(!S){h.innerHTML='';$('#handHint').textContent='';return;}
+  const mt=myTurn();
+  const leg=mt?new Set(rules(0).legal.map(c=>c.id)):null;
+  h.innerHTML=S.hands[0].map(c=>{
+    let cls='';
+    if(mt){cls+=leg.has(c.id)?' playable':(settings.hints?' dim':'');}
+    if(S.sel===c.id) cls+=' sel';
+    if(S.hint===c.id) cls+=' hint';
+    return cardHTML(c,cls,settings.markTrumps&&!S.prelim&&isT(c));
+  }).join('');
+  $('#handHint').textContent=mt?(settings.confirm?(S.sel?'Nochmal tippen oder nach oben wischen zum Ausspielen':'Karte antippen zum Auswählen'):'Tippen oder nach oben wischen zum Ausspielen'):'';
+  layoutHand();
+}
+function layoutHand(){
+  const h=$('#hand'), cards=[...h.children];
+  if(!cards.length) return;
+  h.classList.add('nt');
+  const W=h.clientWidth, cw=cards[0].offsetWidth, n=cards.length;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>h.classList.remove('nt')));
+  const step=n>1?Math.min(cw*1.04,(W-cw-8)/(n-1)):0;
+  const total=cw+step*(n-1), x0=(W-total)/2, mid=(n-1)/2;
+  const fan=step<cw*.9;
+  cards.forEach((c,i)=>{
+    const d=i-mid;
+    c.style.setProperty('--x',(x0+i*step).toFixed(1)+'px');
+    c.style.setProperty('--rot',fan?(d*2.2).toFixed(2)+'deg':'0deg');
+    c.style.setProperty('--dy',fan?(Math.abs(d)*Math.abs(d)*1.1).toFixed(1)+'px':'0px');
+    c.style.zIndex=i+1;
+  });
+}
+function renderTrick(){
+  const t=$('#trick');t.className='trick';
+  t.innerHTML=S?S.trick.map(x=>slotHTML(x.p,x.c,false)).join(''):'';
+}
+function slotHTML(p,c,anim){return `<div class="slot slot${p}" data-p="${p}"><div class="${anim?'fly f'+p:''}">${cardHTML(c,'tc')}</div></div>`;}
+function stakeInfo(){const st=STAKES.find(x=>x.k===settings.stake);return st?`${st.sau}/${st.solo>=100?(st.solo/100).toFixed(st.solo%100?2:0).replace('.',',')+' €':st.solo+' ct'}`:'eigener Tarif';}
+function renderWallet(){
+  $('#walBal').textContent=money(wallet.bal,false);
+  $('#wallet').classList.toggle('neg',wallet.bal<0);
+  $('#walStk').textContent=stakeInfo();
+}
+function renderInfo(){
+  const el=$('#ginfo');
+  renderWallet();
+  if(!S){el.innerHTML='<span style="opacity:.8">Bayerischer Schafkopf gegen Sepp, Resi und Franz</span>';$('#bTip').disabled=true;$('#bLast').disabled=true;return;}
+  let t;
+  if(S.prelim) t=S.phase==='bid'?'<b>Wer spielt?</b>':'Karten werden gegeben';
+  else{const g=S.game;t=`<b>${gameLabel(g)}</b>`+(g.player>=0?`<span>${g.player===0?'du spielst':NAMES[g.player]+' spielt'}</span>`:'');
+    if(g.type==='sauspiel'&&S.team[0]&&g.player!==0) t+=`<span class="chip soft">Du spielst mit ${NAMES[g.player]}</span>`;}
+  if(S.klopf) t+=`<span class="chip">Geklopft ×${2**S.klopf}</span>`;
+  if(S.kontra) t+=`<span class="chip red">${S.kontra===2?'Kontra + Re':'Kontra'}</span>`;
+  el.innerHTML=t;
+  $('#bTip').disabled=!myTurn();
+  $('#bLast').disabled=!S.lastTrick;
+}
+function renderAll(){renderInfo();renderSeats();renderHand();renderTrick();}
+
+let msgT=0;
+function showMsg(text,kind='',ms=3200){
+  const m=$('#msg');m.textContent=text;m.className='show '+kind;
+  clearTimeout(msgT);msgT=setTimeout(()=>m.className='',ms);
+}
+const bubT={};
+function bubble(p,text){
+  const el=p===0?$('#me .bubble'):$('#seat'+p+' .bubble');
+  el.textContent=text;el.classList.add('show');
+  clearTimeout(bubT[p]);bubT[p]=setTimeout(()=>el.classList.remove('show'),2300*speedF());
+}
+function panel(html){const p=$('#panel');p.innerHTML=html;p.hidden=false;p.scrollTop=0;p.onclick=null;return p;}
+function closePanel(){const p=$('#panel');p.hidden=true;p.onclick=null;}
+function askButtons(title,text,btns){
+  return new Promise(res=>{
+    const p=panel(`<h3>${title}</h3><p>${text}</p><div class="btns">${btns.map(([v,l],i)=>`<button class="${i?'':'pri'}" data-v="${v}">${l}</button>`).join('')}</div>`);
+    p.onclick=e=>{const b=e.target.closest('button[data-v]');if(!b)return;closePanel();res(b.dataset.v);};
+  });
+}
+
+/* ================= Eingaben ================= */
+function humanBid(bids){
+  return new Promise(res=>{
+    const hand=S.hands[0], calls=callable(hand);
+    const ic=s=>`<img src="${suitIcon(s)}" alt="">`;
+    const before=bids.length?bids.map(b=>`${NAMES[b.p]}: ${b.d?'hätt a Spiel':'weiter'}`).join(' · '):'Du bist Vorhand und sagst als Erste(r) an.';
+    let h=`<h3>Was spielst du?</h3><p class="small">${before}</p>`;
+    h+=`<div class="grp"><span>Sauspiel – Sau rufen</span>${['E','G','S'].map(s=>{
+      const ok=calls.includes(s);
+      const why=hand.some(c=>c.id===s+'A')?'Du hast diese Sau selbst':`Du hast keine ${SN[s]}-Karte (ohne Ober/Unter)`;
+      return `<button class="gb" data-t="sauspiel" data-s="${s}" ${ok?'':`disabled title="${why}"`}>${ic(s)}${SN[s]}-Sau</button>`;}).join('')}</div>`;
+    h+=`<div class="grp"><span>Farbsolo</span>${SUITS.map(s=>`<button class="gb" data-t="solo" data-s="${s}">${ic(s)}${SN[s]}</button>`).join('')}</div>`;
+    const single=[];
+    if(settings.wenz) single.push(`<button class="gb" data-t="wenz">Wenz <small>nur Unter</small></button>`);
+    if(settings.geier) single.push(`<button class="gb" data-t="geier">Geier <small>nur Ober</small></button>`);
+    if(settings.bettel) single.push(`<button class="gb" data-t="bettel">Bettel <small>keinen Stich</small></button>`);
+    if(single.length) h+=`<div class="grp"><span>Weitere Spiele</span>${single.join('')}</div>`;
+    if(settings.farbwenz) h+=`<div class="grp"><span>Farbwenz</span>${SUITS.map(s=>`<button class="gb" data-t="farbwenz" data-s="${s}">${ic(s)}${SN[s]}</button>`).join('')}</div>`;
+    if(settings.farbgeier) h+=`<div class="grp"><span>Farbgeier</span>${SUITS.map(s=>`<button class="gb" data-t="farbgeier" data-s="${s}">${ic(s)}${SN[s]}</button>`).join('')}</div>`;
+    if(settings.tout) h+=`<label class="toutline"><input type="checkbox" id="toutChk"> als Tout ansagen (alle Stiche, doppelter Wert)</label>`;
+    if(settings.hints){const sg=aiDecide(0);h+=`<p class="sugg">Vorschlag: <b>${sg?gameLabel(sg):'Weiter'}</b></p>`;}
+    h+=`<div class="btns"><button class="pri" data-t="weiter">Weiter (nicht spielen)</button></div>`;
+    const p=panel(h);
+    p.onclick=e=>{
+      const b=e.target.closest('button[data-t]');if(!b||b.disabled)return;
+      const t=b.dataset.t;closePanel();
+      if(t==='weiter') return res(null);
+      const d={type:t};
+      if(t==='sauspiel') d.called=b.dataset.s; else if(b.dataset.s) d.suit=b.dataset.s;
+      const tc=$('#toutChk');
+      if(tc&&tc.checked&&t!=='sauspiel'&&t!=='bettel') d.tout=true;
+      res(d);
+    };
+  });
+}
+function humanPlay(){return new Promise(res=>{S.humanResolve=res;S.sel=null;S.hint=null;renderHand();renderInfo();});}
+function tryPlay(id,force){
+  if(!S)return;
+  if(!myTurn()){if(S.phase==='play')showMsg('Warte, bis du dran bist.');return;}
+  const r=rules(0), el=$(`#hand .card[data-id="${id}"]`);
+  if(r.why[id]){showMsg(r.why[id],'warn',4200);if(el){el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),400);}return;}
+  if(settings.confirm&&!force&&S.sel!==id){S.sel=id;renderHand();return;}
+  const c=S.hands[0].find(x=>x.id===id), done=S.humanResolve;
+  S.humanResolve=null;S.sel=null;S.hint=null;done(c);
+}
+let drag=null, swallow=false;
+$('#hand').addEventListener('pointerdown',e=>{const el=e.target.closest('.card');if(!el)return;drag={id:el.dataset.id,y:e.clientY,x:e.clientX};});
+window.addEventListener('pointerup',e=>{
+  if(!drag)return;const d=drag;drag=null;
+  if(d.y-e.clientY>34&&Math.abs(e.clientX-d.x)<80){swallow=true;setTimeout(()=>swallow=false,350);tryPlay(d.id,true);}
+});
+$('#hand').addEventListener('click',e=>{if(swallow)return;const el=e.target.closest('.card');if(el)tryPlay(el.dataset.id,false);});
+window.addEventListener('resize',layoutHand);
+
+/* ================= Spielablauf ================= */
+function newState(){
+  return {dealer,hands:[[],[],[],[]],start:null,trick:[],won:[[],[],[],[]],log:[],played:new Set(),voids:[{},{},{},{}],ledCount:{},
+    klopf:0,kontra:0,game:makeGame({type:'sauspiel',called:'E',player:-1}),prelim:true,team:[false,false,false,false],
+    revealed:false,davon:false,rufLed:false,lastTrick:null,turn:-1,phase:'deal',humanResolve:null,sel:null,hint:null};
+}
+function startGame(){
+  gen++;closePanel();closeModal();
+  run().catch(e=>{if(e!==ABORT){console.error(e);showMsg('Fehler: '+e.message,'warn',8000);}});
+}
+async function run(){
+  buildDeck();
+  dealer=(dealer+1)%4;saveAll();
+  S=newState();
+  const deck=shuffle(DECK.slice()), n=deck.length/4, half=n/2;
+  const full=[0,1,2,3].map(i=>deck.slice(i*n,(i+1)*n));
+  for(let p=0;p<4;p++){S.hands[p]=full[p].slice(0,half);sortHand(S.hands[p]);}
+  renderAll();showMsg(`${dealer===0?'Du gibst':NAMES[dealer]+' gibt'}. Vorhand ist ${(dealer+1)%4===0?'du':NAMES[(dealer+1)%4]}.`);
+  await sleep(600);
+  const order=[1,2,3,4].map(i=>(dealer+i)%4);
+  if(settings.klopfen){
+    for(const p of order){
+      let k;
+      if(p===0) k=(await askButtons('Klopfen?',`Du siehst die ersten ${half} Karten. Klopfen verdoppelt den Wert des Spiels.`,[['n','Nicht klopfen'],['k','Klopfen']]))==='k';
+      else {await sleep(300);k=aiKlopf(p);}
+      if(k){S.klopf++;bubble(p,'Klopf, klopf!');renderInfo();}
+    }
+  }
+  for(let p=0;p<4;p++){S.hands[p]=full[p].slice();sortHand(S.hands[p]);}
+  S.start=full.map(h=>h.slice());
+  renderAll();await sleep(450);
+
+  if(!settings.kurz) for(let p=0;p<4;p++){
+    if(full[p].filter(c=>c.r==='O'||c.r==='U').length===8){
+      S.game=makeGame({type:'solo',suit:'H',player:p,tout:true});S.game.sie=true;S.prelim=false;
+      setTeams();bubble(p,'Sie!');S.phase='end';renderAll();await sleep(1400);
+      return finish();
+    }
+  }
+
+  S.phase='bid';renderInfo();
+  const bids=[];
+  for(const p of order){
+    S.turn=p;renderSeats();
+    let d;
+    if(p===0) d=await humanBid(bids);
+    else {await sleep(650);d=aiDecide(p);}
+    bids.push({p,d});
+    bubble(p,d?'I hätt a Spiel':'Weiter');
+  }
+  S.turn=-1;
+  const wants=bids.filter(b=>b.d);
+  if(!wants.length){
+    if(settings.ramsch){
+      S.game=makeGame({type:'ramsch',player:-1});S.prelim=false;
+      await sleep(500);showMsg('Keiner spielt: Es wird geramscht. Wer die meisten Augen hat, verliert.','',4500);
+    }else{
+      await sleep(700);S.phase='end';renderAll();
+      panel(`<h3>Zusammengeworfen</h3><p>Keiner wollte spielen. Die Karten werden neu gegeben, der nächste Spieler gibt.</p><div class="btns"><button class="pri" id="again">Neu geben</button></div>`);
+      $('#again').onclick=startGame;return;
+    }
+  }else{
+    let best=wants[0];
+    for(const b of wants) if(declRank(b.d)>declRank(best.d)) best=b;
+    S.game=makeGame(Object.assign({},best.d,{player:best.p}));S.prelim=false;
+    await sleep(500);
+    bubble(best.p,announceText(S.game));
+    const human=wants.find(b=>b.p===0);
+    if(human&&best.p!==0) showMsg(`${NAMES[best.p]} spielt ${gameLabel(S.game)}. Das geht vor (höheres Spiel oder Vorrang durch Sitzposition).`,'',5000);
+    else if(best.p!==0) showMsg(`${NAMES[best.p]} spielt ${gameLabel(S.game)}.`);
+  }
+  setTeams();
+  for(let p=0;p<4;p++) sortHand(S.hands[p]);
+  renderAll();
+  if(S.game.type==='sauspiel'&&S.team[0]&&S.game.player!==0){await sleep(400);showMsg(`Du hast die ${SN[S.game.called]}-Sau: Du spielst heimlich mit ${NAMES[S.game.player]}.`,'tip',5000);}
+  await sleep(900);
+  if(settings.kontra&&S.game.type!=='ramsch') await kontraPhase(order);
+
+  S.phase='play';
+  let leader=(dealer+1)%4;
+  const nT=S.hands[0].length;
+  for(let t=0;t<nT;t++){
+    S.trick=[];renderTrick();
+    for(let k=0;k<4;k++){
+      const p=(leader+k)%4;S.turn=p;renderSeats();renderInfo();
+      let c;
+      if(p===0) c=await humanPlay();
+      else {await sleep(620);c=aiPlay(p);}
+      S.justRevealed=-1;S.justRan=-1;
+      applyCard(p,c);
+      $('#trick').insertAdjacentHTML('beforeend',slotHTML(p,c,true));
+      renderHand();renderSeats();
+      if(S.justRan>=0) {bubble(p,'Davongelaufen!');showMsg(`${NAMES[p]} läuft mit der Ruffarbe davon (mindestens ${settings.kurz?3:4} Karten).`);}
+      if(S.justRevealed>=0&&S.game.player!==p) showMsg(`${p===0?'Du hast':NAMES[p]+' hat'} die gerufene Sau: Partner von ${S.game.player===0?'dir':NAMES[S.game.player]}.`);
+    }
+    S.turn=-1;renderSeats();renderInfo();
+    const wi=trickWinnerIdx(S.trick), w=S.trick[wi].p;
+    $('#trick').querySelector(`.slot[data-p="${w}"]`).classList.add('win');
+    await sleep(950);
+    const tt=$('#trick');tt.classList.add('go','g'+w);
+    await sleep(480);
+    S.won[w].push(S.trick.map(x=>x.c));
+    S.lastTrick={cards:S.trick.slice(),w};S.log.push(S.lastTrick);
+    S.trick=[];renderTrick();renderSeats();renderInfo();
+    leader=w;
+    if(S.game.type==='bettel'&&w===S.game.player){showMsg(`${w===0?'Du hast':NAMES[w]+' hat'} einen Stich bekommen. Der Bettel ist verloren.`);break;}
+    if(S.game.tout&&!S.team[w]){showMsg('Die Gegner haben einen Stich. Das Tout ist verloren.');break;}
+  }
+  S.phase='end';renderAll();
+  await sleep(500);
+  finish();
+}
+function setTeams(){
+  const g=S.game;
+  for(let p=0;p<4;p++){
+    if(g.type==='ramsch') S.team[p]=false;
+    else if(g.type==='sauspiel') S.team[p]=p===g.player||S.start[p].some(c=>c.id===g.called+'A');
+    else S.team[p]=p===g.player;
+  }
+}
+async function kontraPhase(order){
+  const g=S.game;let k=false;
+  for(const q of order){
+    if(S.team[q]) continue;
+    if(q===0) k=(await askButtons('Kontra?',`${g.player===0?'Du spielst':NAMES[g.player]+' spielt'} ${gameLabel(g)}. Glaubst du, die Gegenpartei gewinnt? Kontra verdoppelt den Wert.`,[['n','Kein Kontra'],['k','Kontra!']]))==='k';
+    else {await sleep(250);k=aiKontra(q);}
+    if(k){S.kontra=1;bubble(q,'Kontra!');renderInfo();break;}
+  }
+  if(!k) return;
+  await sleep(700);
+  for(const q of order){
+    if(!S.team[q]) continue;
+    let r;
+    if(q===0) r=(await askButtons('Re?','Die Gegner haben Kontra gegeben. Mit Re verdoppelst du noch einmal.',[['n','Kein Re'],['r','Re!']]))==='r';
+    else {await sleep(250);r=aiRe(q);}
+    if(r){S.kontra=2;bubble(q,'Re!');renderInfo();break;}
+  }
+}
+function laufende(){
+  const g=S.game, tr=g.trumps;
+  if(!tr.length) return {n:0};
+  const owner=id=>S.start.findIndex(h=>h.some(c=>c.id===id));
+  const first=S.team[owner(tr[0])];
+  let n=0;for(const id of tr){const o=owner(id);if(o>=0&&S.team[o]===first)n++;else break;}
+  return {n,mit:first};
+}
+
+/* ================= Abrechnung ================= */
+function settle(){
+  const g=S.game, T={sau:+settings.tSau,solo:+settings.tSolo,schn:+settings.tSchn,lauf:+settings.tLauf};
+  const P=[0,1,2,3].map(p=>S.won[p].flat().reduce((s,c)=>s+PTS[c.r],0)), K=[0,1,2,3].map(p=>S.won[p].length);
+  const mult=2**(S.klopf+S.kontra), pay=[0,0,0,0], lines=[];
+  let head='', win=null;
+  if(g.type==='ramsch'){
+    const all=K.findIndex(k=>k===K.reduce((a,b)=>a+b,0)&&k>0);
+    if(all>=0){
+      const v=T.solo*mult;
+      for(let p=0;p<4;p++) pay[p]=p===all?3*v:-v;
+      head=`Durchmarsch! ${all===0?'Du hast':NAMES[all]+' hat'} alle Stiche und gewinnt.`;
+      lines.push(['Durchmarsch (Solotarif)',T.solo]);
+    }else{
+      const max=Math.max(...P);let losers=[0,1,2,3].filter(p=>P[p]===max);
+      if(losers.length>1){const mt=Math.max(...losers.map(p=>K[p]));losers=losers.filter(p=>K[p]===mt);}
+      const jung=[0,1,2,3].filter(p=>K[p]===0).length;
+      const v=T.sau*2**jung*mult;
+      for(const l of losers) for(let p=0;p<4;p++) if(!losers.includes(p)){pay[l]-=v;pay[p]+=v;}
+      head=`${losers.map(l=>l===0?'Du':NAMES[l]).join(' und ')} ${losers.length>1?'verlieren':losers[0]===0?'verlierst':'verliert'} den Ramsch mit ${max} Augen.`;
+      lines.push(['Grundtarif (Sauspiel)',T.sau]);
+      if(jung) lines.push([`${jung} Jungfrau${jung>1?'en':''} (ohne Stich)`,`×${2**jung}`]);
+    }
+    if(S.klopf) lines.push([`${S.klopf}× geklopft`,`×${2**S.klopf}`]);
+    win=pay[0]>0;
+  }else{
+    const party=[0,1,2,3].filter(p=>S.team[p]), opp=[0,1,2,3].filter(p=>!S.team[p]);
+    const pp=party.reduce((s,p)=>s+P[p],0), op=opp.reduce((s,p)=>s+P[p],0);
+    const pk=party.reduce((s,p)=>s+K[p],0), ok=opp.reduce((s,p)=>s+K[p],0);
+    let schn=false,schw=false;
+    if(g.sie) win=true;
+    else if(g.type==='bettel') win=pk===0;
+    else if(g.tout) win=ok===0;
+    else{win=pp>=61;schn=win?pp>=91:pp<=30;schw=win?ok===0:pk===0;}
+    const base=g.type==='sauspiel'?T.sau:T.solo;let v=base;
+    lines.push([`Grundtarif ${g.type==='sauspiel'?'Sauspiel':'Solo'}`,base]);
+    if(g.type!=='bettel'){
+      if(schn){v+=T.schn;lines.push(['Schneider',T.schn]);}
+      if(schw){v+=T.schn;lines.push(['Schwarz',T.schn]);}
+      const L=laufende(), min=(g.type==='wenz'||g.type==='geier')?+settings.laufWG:+settings.laufOU;
+      if(L.n>=min){v+=L.n*T.lauf;lines.push([`${L.n} Laufende (${L.mit?'mit':'ohne'} ${L.n})`,L.n*T.lauf]);}
+    }
+    if(g.tout){v*=2;lines.push([g.sie?'Sie: zählt wie Tout ×2':'Tout ×2','×2']);}
+    if(g.sie){v*=2;lines.push(['Sie: noch einmal ×2','×2']);}
+    if(S.klopf) lines.push([`${S.klopf}× geklopft`,`×${2**S.klopf}`]);
+    if(S.kontra) lines.push([S.kontra===2?'Kontra und Re':'Kontra',`×${2**S.kontra}`]);
+    v*=mult;
+    if(g.type==='sauspiel'){for(const p of party)pay[p]=win?v:-v;for(const o of opp)pay[o]=win?-v:v;}
+    else{pay[g.player]=win?3*v:-3*v;for(const o of opp)pay[o]=win?-v:v;}
+    const who=party.map(p=>p===0?'Du':NAMES[p]).join(' und ');
+    const verb=party.length>1?(win?'gewinnen':'verlieren'):(party[0]===0?(win?'gewinnst':'verlierst'):(win?'gewinnt':'verliert'));
+    if(g.sie) head=`${who} ${party[0]===0?'hast':'hat'} Sie: alle Ober und Unter. Sofort gewonnen!`;
+    else if(g.type==='bettel'||g.tout) head=`${who} ${verb} ${gameLabel(g)}.`;
+    else head=`${who} ${verb} mit ${pp} zu ${op} Augen${schw?' – schwarz':schn?' – Schneider':''}.`;
+    win=S.team[0]?win:!win;
+  }
+  return {pay,lines,head,P,K,win};
+}
+function finish(){
+  const r=settle(), g=S.game;
+  for(let p=0;p<4;p++) totals[p]+=r.pay[p];
+  history.unshift({label:gameLabel(g),player:g.player,pay:r.pay,head:r.head});
+  history=history.slice(0,200);
+  wallet.bal+=r.pay[0];wallet.games++;if(r.pay[0]>0)wallet.won++;
+  wallet.best=Math.max(wallet.best,r.pay[0]);wallet.worst=Math.min(wallet.worst,r.pay[0]);
+  saveAll();renderAll();
+  const rows=[0,1,2,3].map(p=>`<tr><td>${NAMES[p]}${S.team[p]&&g.type!=='ramsch'?(p===g.player?' <span class="tag pl">Spieler</span>':' <span class="tag pa">Partner</span>'):''}</td><td class="n">${r.P[p]}</td><td class="n">${r.K[p]}</td><td class="n ${r.pay[p]>0?'pos':r.pay[p]<0?'neg':''}">${money(r.pay[p])}</td></tr>`).join('');
+  const ln=r.lines.map(([a,b])=>`<tr><td>${a}</td><td class="n">${typeof b==='number'?money(b,false):b}</td></tr>`).join('');
+  const broke=wallet.bal<=0;
+  panel(`<h3>${gameLabel(g)}</h3><p class="res-head ${r.win?'win':'lose'}">${r.head}</p>
+    <div class="money ${r.pay[0]>0?'pos':r.pay[0]<0?'neg':''}">${money(r.pay[0])}</div>
+    <p class="small">Dein Spielgeld: <b>${money(wallet.bal,false)}</b>${broke?' – du bist blank!':''}</p>
+    <table class="t"><tr><th>Spieler</th><th class="n">Augen</th><th class="n">Stiche</th><th class="n">Betrag</th></tr>${rows}</table>
+    <details style="margin-top:8px"><summary class="small" style="cursor:pointer">So wurde gerechnet</summary><table class="t">${ln}</table></details>
+    <div class="btns">${broke?`<button class="pri" id="rebuy">Nachkaufen (${money(settings.startMoney,false)})</button>`:''}<button class="${broke?'':'pri'}" id="next">Nächstes Spiel</button>${S.log.length?'<button id="review">Stiche nachschauen</button>':''}</div>`);
+  $('#next').onclick=startGame;
+  const rb=$('#rebuy');if(rb) rb.onclick=()=>{rebuy();startGame();};
+  const rv=$('#review');if(rv) rv.onclick=()=>openSheet('Spielverlauf',reviewHTML());
+}
+function rebuy(){wallet.bal+=settings.startMoney;wallet.rebuys++;saveAll();renderWallet();}
+function trickRow(t,i){
+  const cards=t.cards.map(x=>`<div class="cw ${x.p===t.w?'w':''}">${cardHTML(x.c,'lst')}<span class="who">${NAMES[x.p]}</span></div>`).join('');
+  const pts=t.cards.reduce((s,x)=>s+PTS[x.c.r],0);
+  return `<div class="trow"><span class="lbl">${i!=null?`Stich ${i+1}: `:''}${t.w===0?'Du stichst':NAMES[t.w]+' sticht'} · ${pts} Augen</span>${cards}</div>`;
+}
+function reviewHTML(){return `<p class="small">${gameLabel(S.game)} · Die gold umrandete Karte hat den Stich gemacht. Ausgespielt hat jeweils die Karte ganz links.</p>${S.log.map((t,i)=>trickRow(t,i)).join('')}`;}
+
+/* ================= Blätter: Menü, Geld, Einstellungen, Regeln ================= */
+let sheetKind=null;
+function openSheet(title,html,kind=null){
+  sheetKind=kind;
+  const sh=$('#sheet'), keep=$('#modal').hidden?0:sh.scrollTop;
+  sh.innerHTML=`<div class="shead"><h2>${title}</h2><button id="mclose">Fertig</button></div><div class="sbody">${html}</div>`;
+  $('#modal').hidden=false;sh.scrollTop=kind&&kind===sh.dataset.kind?keep:0;sh.dataset.kind=kind||'';
+  $('#mclose').onclick=closeModal;
+}
+function closeModal(){$('#modal').hidden=true;sheetKind=null;}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+function modeSummary(){
+  const on=['Sauspiel','Farbsolo'];
+  if(settings.wenz)on.push('Wenz');if(settings.geier)on.push('Geier');if(settings.farbwenz)on.push('Farbwenz');
+  if(settings.farbgeier)on.push('Farbgeier');if(settings.bettel)on.push('Bettel');if(settings.tout)on.push('Tout');
+  return `${settings.kurz?'Kurze Karte':'Lange Karte'} · ${on.join(', ')} · ${settings.ramsch?'Ramsch':'Zusammenwerfen'}, wenn keiner spielt`;
+}
+function menuHTML(){
+  return `<div class="menu">
+    <button data-m="new"><b>Neues Spiel</b><span>Karten neu geben. Ein laufendes Spiel wird abgebrochen.</span></button>
+    <button data-m="money"><b>Spielgeld &amp; Einsatz</b><span>${money(wallet.bal,false)} · Tarif ${stakeInfo()}</span></button>
+    <button data-m="set"><b>Einstellungen</b><span>Spielarten, Kartenblatt, Bedienung, Hilfen</span></button>
+    <button data-m="deck"><b>Eigenes Kartenblatt</b><span>Fotos deiner eigenen Karten verwenden</span></button>
+    <button data-m="rules"><b>Regeln</b><span>Alles Wichtige zum Bayerischen Schafkopf</span></button>
+    <button data-m="trump"><b>Trumpfreihenfolge</b><span>Für das aktuelle Spiel</span></button>
+    <button data-m="score"><b>Spielliste</b><span>Punktestand und letzte Spiele</span></button>
+    <button data-m="install"><b>Als App aufs iPhone</b><span>So landet Schafkopf auf deinem Home-Bildschirm</span></button>
+  </div><p class="small" style="margin-top:14px">Aktuell: ${modeSummary()}</p>`;
+}
+const OPEN={
+  menu:()=>openSheet('Menü',menuHTML(),'menu'),
+  money:()=>openSheet('Spielgeld',moneyHTML(),'money'),
+  set:()=>openSheet('Einstellungen',settingsHTML(),'set'),
+  deck:()=>openSheet('Eigenes Kartenblatt',deckHTML(),'deck'),
+  rules:()=>openSheet('Regeln',RULES,'rules'),
+  trump:()=>openSheet('Trumpfreihenfolge',trumpHTML(),'trump'),
+  score:()=>openSheet('Spielliste',scoreHTML(),'score'),
+  install:()=>openSheet('Als App installieren',INSTALL,'install')};
+function refreshSheet(){if(sheetKind&&OPEN[sheetKind])OPEN[sheetKind]();}
+$('#bMenu').onclick=OPEN.menu;
+$('#wallet').onclick=OPEN.money;
+$('#bLast').onclick=()=>{if(S&&S.lastTrick)openSheet('Letzter Stich',`${trickRow(S.lastTrick,null)}<p class="small">Nach den Regeln darf man sich nur den zuletzt gemachten Stich noch einmal ansehen.</p>`);};
+$('#bTip').onclick=()=>{
+  if(!myTurn())return;
+  const c=aiPlay(0);S.hint=c.id;S.sel=settings.confirm?c.id:null;renderHand();showMsg(`Tipp: ${cname(c)}. ${AIR}`,'tip',6000);
+};
+
+function setOpt(k,v){
+  settings[k]=v;
+  if(k==='stake'){const st=STAKES.find(x=>x.k===v);if(st){settings.tSau=st.sau;settings.tSolo=st.solo;settings.tSchn=st.sau;settings.tLauf=st.sau;}}
+  if(['tSau','tSolo','tSchn','tLauf'].includes(k)){const st=STAKES.find(x=>x.sau===settings.tSau&&x.solo===settings.tSolo&&settings.tSchn===x.sau&&settings.tLauf===x.sau);settings.stake=st?st.k:'custom';}
+  saveAll();renderAll();refreshSheet();
+}
+$('#sheet').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.k){setOpt(t.dataset.k,t.checked);}
+});
+$('#sheet').addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.m){const m=b.dataset.m;
+    if(m==='new') startGame();
+    else if(OPEN[m]) OPEN[m]();
+    else if(m==='reset'){const keep={startMoney:settings.startMoney};settings=Object.assign({},DEF,keep);saveAll();renderAll();refreshSheet();showMsg('Standard-Einstellungen wiederhergestellt.');}
+    else if(m==='clear'){totals=[0,0,0,0];history=[];saveAll();refreshSheet();renderAll();}
+    else if(m==='rebuy'){rebuy();refreshSheet();}
+    else if(m==='restart'){wallet={bal:settings.startMoney,rebuys:0,games:0,won:0,best:0,worst:0};saveAll();renderWallet();refreshSheet();}
+    else if(m==='deckAll'){$('#filePickMulti').click();}
+    else if(m==='deckClear'){for(const id of Object.keys(OWN))await IDB.put(id,null);await loadOwnDeck();refreshSheet();showMsg('Eigene Kartenbilder entfernt.');}
+    return;}
+  if(b.dataset.seg){let v=b.dataset.val;if(v==='true')v=true;else if(v==='false')v=false;else if(/^\d+$/.test(v))v=+v;setOpt(b.dataset.seg,v);return;}
+  if(b.dataset.step){const k=b.dataset.step;setOpt(k,Math.max(0,(+settings[k])+(+b.dataset.d)));return;}
+  if(b.dataset.stake){setOpt('stake',b.dataset.stake);return;}
+  if(b.dataset.slot){pickSlot=b.dataset.slot;$('#filePick').value='';$('#filePick').click();return;}
+});
+let pickSlot=null;
+$('#filePick').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f||!pickSlot)return;
+  try{const d=await processImage(f);if(!(await IDB.put(pickSlot,d)))OWN[pickSlot]=d;await loadOwnDeck();OWN[pickSlot]=OWN[pickSlot]||d;refreshSheet();renderAll();}
+  catch(err){showMsg(err.message,'warn');}
+});
+$('#filePickMulti').addEventListener('change',async e=>{
+  const files=[...e.target.files];let ok=0;const miss=[];
+  for(const f of files){const id=matchName(f.name);if(!id){miss.push(f.name);continue;}
+    try{const d=await processImage(f);await IDB.put(id,d);OWN[id]=d;ok++;}catch(err){miss.push(f.name);}}
+  await loadOwnDeck();refreshSheet();renderAll();
+  showMsg(`${ok} Karten übernommen.${miss.length?` Nicht erkannt: ${miss.slice(0,3).join(', ')}${miss.length>3?' …':''}`:''}`,miss.length?'warn':'',6000);
+  e.target.value='';
+});
+
+const sw=(k,label,sub='')=>`<div class="rowi"><div class="lab"><b>${label}</b>${sub?`<small>${sub}</small>`:''}</div><label class="sw"><input type="checkbox" data-k="${k}" ${settings[k]?'checked':''} aria-label="${label}"><span></span></label></div>`;
+const seg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-seg="${k}" data-val="${v}" class="${String(settings[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
+const segRow=(k,label,sub,opts)=>`<div class="rowi col"><div class="lab"><b>${label}</b>${sub?`<small>${sub}</small>`:''}</div>${seg(k,opts)}</div>`;
+const step=(k,label,d=5)=>`<div class="rowi"><div class="lab"><b>${label}</b></div><div class="stepper"><button data-step="${k}" data-d="-${d}" aria-label="weniger">−</button><output>${money(settings[k],false)}</output><button data-step="${k}" data-d="${d}" aria-label="mehr">+</button></div></div>`;
+function stakesHTML(){
+  return `<div class="stakes">${STAKES.map(s=>`<button class="stake ${settings.stake===s.k?'on':''}" data-stake="${s.k}"><b>${s.n}</b><span>Sauspiel ${money(s.sau,false)}<br>Solo ${money(s.solo,false)}</span></button>`).join('')}</div>`;
+}
+function settingsHTML(){
+  const own=Object.keys(OWN).length;
+  return `
+  <div class="sec">Kartenblatt</div><div class="group">
+    ${segRow('kurz','Blatt','Gilt ab dem nächsten Geben.',[[false,'Lang · 32 Karten'],[true,'Kurz · 24 Karten']])}
+    ${sw('ownDeck','Eigene Kartenbilder verwenden',own?`${own} von 32 Karten aus deinen Fotos`:'Noch keine Fotos geladen')}
+    <div class="rowi"><div class="lab"><button class="link" data-m="deck">Eigenes Kartenblatt verwalten ›</button></div></div>
+    ${sw('markTrumps','Trümpfe markieren','Goldener Rand links auf deinen Trumpfkarten')}
+  </div>
+  <div class="sec">Spielarten</div><div class="group">
+    <div class="rowi"><div class="lab"><b>Sauspiel und Farbsolo</b><small>Immer dabei. Trumpf: alle Ober, alle Unter, dann Herz (beim Solo die gewählte Farbe).</small></div></div>
+    ${sw('wenz','Wenz','Nur die vier Unter sind Trumpf')}
+    ${sw('geier','Geier','Nur die vier Ober sind Trumpf')}
+    ${sw('farbwenz','Farbwenz','Unter und eine Farbe sind Trumpf')}
+    ${sw('farbgeier','Farbgeier','Ober und eine Farbe sind Trumpf')}
+    ${sw('bettel','Bettel','Der Spieler darf keinen Stich machen')}
+    ${sw('tout','Tout','Ansage, alle Stiche zu machen. Doppelter Wert')}
+    ${segRow('ramsch','Wenn keiner spielt','',[[false,'Zusammenwerfen'],[true,'Ramsch']])}
+  </div>
+  <div class="sec">Verdoppeln</div><div class="group">
+    ${sw('klopfen','Klopfen','Nach der ersten Kartenhälfte. Jedes Klopfen verdoppelt.')}
+    ${sw('kontra','Kontra und Re','Vor dem ersten Ausspielen')}
+  </div>
+  <div class="sec">Einsatz</div><div class="group">
+    <div class="rowi col">${stakesHTML()}</div>
+    ${step('tSau','Sauspiel')}${step('tSolo','Solo, Wenz, Geier, Bettel',10)}${step('tSchn','Schneider, Schwarz je')}${step('tLauf','Pro Laufendem')}
+    ${segRow('laufOU','Laufende zählen ab','Sauspiel und Farbsolo',[[2,'2'],[3,'3'],[4,'4']])}
+    ${segRow('laufWG','Laufende zählen ab','Wenz und Geier',[[2,'2'],[3,'3']])}
+  </div>
+  <div class="sec">Bedienung</div><div class="group">
+    ${segRow('confirm','Karte ausspielen','Nach oben wischen spielt die Karte immer sofort aus.',[[false,'Einmal tippen'],[true,'Tippen + bestätigen']])}
+    ${segRow('speed','Tempo der Mitspieler','',[['slow','Gemütlich'],['normal','Normal'],['fast','Flott']])}
+  </div>
+  <div class="sec">Übungshilfen</div><div class="group">
+    ${sw('hints','Hilfen anzeigen','Nicht erlaubte Karten abdunkeln, Spielvorschlag beim Ansagen')}
+    ${sw('showPts','Augen mitzählen','Gesammelte Augen jedes Spielers anzeigen')}
+    ${sw('open','Offen spielen','Die Karten der Mitspieler sind sichtbar')}
+  </div>
+  <div class="btns"><button data-m="reset">Alles auf Standard zurücksetzen</button></div>`;
+}
+function moneyHTML(){
+  const rate=wallet.games?Math.round(wallet.won/wallet.games*100):0;
+  return `<p class="small" style="margin-top:12px">Dein Spielgeld (nur zum Üben, kein echtes Geld)</p>
+  <div class="bal ${wallet.bal<0?'neg':''}">${money(wallet.bal,false)}</div>
+  <div class="stats"><div><b>${wallet.games}</b><span>Spiele</span></div><div><b>${rate} %</b><span>gewonnen</span></div>
+    <div><b class="pos">${money(wallet.best)}</b><span>bester Gewinn</span></div><div><b class="neg">${money(wallet.worst)}</b><span>größter Verlust</span></div>
+    <div><b>${wallet.rebuys}</b><span>mal nachgekauft</span></div></div>
+  <div class="sec">Einsatz wählen</div><div class="group"><div class="rowi col">${stakesHTML()}<small class="small">Schneider, Schwarz und jeder Laufende kosten so viel wie ein Sauspiel. Klopfen, Kontra und Re verdoppeln.</small></div></div>
+  <div class="sec">Kasse</div><div class="group">
+    ${segRow('startMoney','Startgeld','Beim Nachkaufen und Neuanfang',[[2000,'20 €'],[5000,'50 €'],[10000,'100 €'],[50000,'500 €']])}
+    <div class="rowi"><div class="lab"><b>Nachkaufen</b><small>${money(settings.startMoney,false)} in die Kasse legen</small></div><button class="btn" data-m="rebuy" style="flex:none">Nachkaufen</button></div>
+    <div class="rowi"><div class="lab"><b>Neu anfangen</b><small>Kasse und Statistik zurücksetzen</small></div><button class="btn" data-m="restart" style="flex:none">Neu anfangen</button></div>
+  </div>`;
+}
+function deckHTML(){
+  const ids=[];for(const s of SUITS)for(const r of ORDER)ids.push(s+r);
+  const n=ids.filter(id=>OWN[id]).length;
+  return `<p style="margin-top:12px">Mit deinen eigenen Fotos sehen die Karten genauso aus wie dein Blatt am Stammtisch. Fotografiere jede Karte von oben auf einem einfarbigen Untergrund. Das Bild wird automatisch aufs Kartenformat zugeschnitten.</p>
+  <p class="small">${n} von 32 Karten haben ein eigenes Foto. Tippe auf eine Karte, um ein Foto aufzunehmen oder auszuwählen. Fehlende Karten bleiben gezeichnet. Die Bilder bleiben nur auf diesem Gerät.</p>
+  <div class="btns" style="margin-bottom:14px"><button class="pri" data-m="deckAll">Mehrere Bilder laden</button>${n?'<button data-m="deckClear">Alle Fotos entfernen</button>':''}</div>
+  <p class="small">Beim Laden mehrerer Bilder erkennt das Spiel die Karte am Dateinamen, z.&nbsp;B. <kbd>eichel-ober.jpg</kbd>, <kbd>herz_sau.png</kbd> oder <kbd>gras 10.jpg</kbd>.</p>
+  ${SUITS.map(s=>`<div class="sec">${SN[s]}</div><div class="deckgrid">${ORDER.map(r=>{const id=s+r;return `<button class="dslot ${OWN[id]?'own':''}" data-slot="${id}">${cardHTML(fromId(id))}<span>${RNAME[r]}</span></button>`;}).join('')}</div>`).join('')}`;
+}
+function trumpHTML(){
+  const g=(S&&!S.prelim&&S.game)?S.game:makeGame({type:'sauspiel',called:'E'});
+  const ranks=deckRanks();
+  let h=`<p class="small" style="margin-top:12px">${S&&!S.prelim?gameLabel(g):'Standard: Sauspiel, wie beim normalen Schafkopf'} · links die höchste Karte</p>`;
+  if(g.trumps.length) h+=`<h3>Trumpf (${g.trumps.length} Karten)</h3><div class="ladder">${g.trumps.filter(id=>ranks.includes(id.slice(1))).map(id=>cardHTML(fromId(id))).join('')}</div>`;
+  else h+=`<p>In diesem Spiel gibt es keinen Trumpf.</p>`;
+  h+=`<h3>Farben</h3>`;
+  for(const s of SUITS){
+    const ids=[...g.si.entries()].filter(([id])=>id[0]===s).sort((a,b)=>a[1]-b[1]).map(x=>x[0]);
+    if(ids.length) h+=`<div class="ladder" style="margin:8px 0">${ids.map(id=>cardHTML(fromId(id))).join('')}</div>`;
+  }
+  h+=`<p class="small">Augen: Sau 11 · Zehn 10 · König 4 · Ober 3 · Unter 2 · Neun, Acht, Sieben 0. Zusammen 120 Augen.</p>`;
+  return h;
+}
+function scoreHTML(){
+  const head=`<tr><th>Spiel</th>${NAMES.map(n=>`<th class="n">${n}</th>`).join('')}</tr>`;
+  const tot=`<tr class="tot"><td>Gesamt</td>${totals.map(t=>`<td class="n ${t>0?'pos':t<0?'neg':''}">${money(t)}</td>`).join('')}</tr>`;
+  const rows=history.slice(0,60).map(h=>`<tr><td>${h.label}${h.player>=0?` <span class="small">(${NAMES[h.player]})</span>`:''}</td>${h.pay.map(v=>`<td class="n ${v>0?'pos':v<0?'neg':''}">${money(v)}</td>`).join('')}</tr>`).join('');
+  return `<div style="overflow-x:auto;margin-top:10px"><table class="t">${head}${tot}${rows||'<tr><td colspan="5" class="small">Noch keine Spiele gespielt.</td></tr>'}</table></div>
+    <div class="btns"><button data-m="clear">Spielliste löschen</button></div>`;
+}
+const INSTALL=`<p style="margin-top:12px">Auf dem iPhone und iPad kannst du Schafkopf wie eine App auf den Home-Bildschirm legen. Dann startet es im Vollbild ohne Adressleiste.</p>
+<h3>So geht's in Safari</h3>
+<ul><li>Öffne die Schafkopf-Seite in <b>Safari</b>.</li>
+<li>Tippe unten auf das <b>Teilen</b>-Symbol (Quadrat mit Pfeil nach oben).</li>
+<li>Wähle <b>Zum Home-Bildschirm</b> und tippe auf <b>Hinzufügen</b>.</li></ul>
+<p>Am besten funktioniert das mit der eigenen App-Version (Ordner <kbd>schafkopf-app</kbd>), die du kostenlos ins Netz stellst. Sie läuft danach auch ohne Internet.</p>
+<p class="small">Spielgeld, Einstellungen und eigene Kartenfotos werden pro Gerät gespeichert.</p>`;
+
+const RULES=`<p style="margin-top:12px">Bayerischer Schafkopf wird zu viert gespielt. Du sitzt unten, im Uhrzeigersinn folgen Sepp (links), Resi (oben) und Franz (rechts).</p>
+<h3>Karten und Augen</h3>
+<p>Gespielt wird mit dem bayerischen Blatt in den Farben Eichel, Gras, Herz und Schellen. Lange Karte: 32 Karten, jeder bekommt 8. Kurze Karte: 24 Karten ohne Sieben und Acht, jeder bekommt 6.</p>
+<p>Augen: Sau 11, Zehn 10, König 4, Ober 3, Unter 2, Neun/Acht/Sieben 0. Im ganzen Spiel gibt es 120 Augen.</p>
+<h3>Trumpf im Normalspiel</h3>
+<p>Beim Sauspiel (und beim Ramsch) sind Trumpf, von hoch nach niedrig: Eichel-Ober, Gras-Ober, Herz-Ober, Schellen-Ober, Eichel-Unter, Gras-Unter, Herz-Unter, Schellen-Unter, dann Herz-Sau, Herz-Zehn, Herz-König, Herz-Neun, Herz-Acht, Herz-Sieben. In den übrigen Farben gilt: Sau, Zehn, König, Neun, Acht, Sieben.</p>
+<h3>Ablauf</h3>
+<ul><li>Der Geber wechselt reihum. Links vom Geber sitzt die Vorhand: Sie sagt zuerst an und spielt die erste Karte aus.</li>
+<li>Bei „Klopfen“ bekommt jeder zuerst die Hälfte der Karten und darf klopfen. Jedes Klopfen verdoppelt den Spielwert.</li>
+<li>Reihum sagt jeder „Weiter“ oder „I hätt a Spiel“. Wollen mehrere spielen, gewinnt das höhere Spiel: Sauspiel &lt; Bettel &lt; Solo, Wenz, Geier, Farbwenz, Farbgeier &lt; Tout. Bei gleich hohen Spielen hat der Vordere Vorrang.</li>
+<li>Will keiner spielen, wird zusammengeworfen oder (je nach Einstellung) geramscht.</li></ul>
+<h3>Zugeben</h3>
+<ul><li>Wird Trumpf ausgespielt, musst du Trumpf zugeben, wenn du einen hast.</li>
+<li>Wird eine Farbe ausgespielt, musst du diese Farbe zugeben. Ober und Unter zählen dabei nicht zur Farbe, sie sind Trumpf.</li>
+<li>Kannst du nicht zugeben, darfst du stechen oder eine beliebige Karte abwerfen. Es gibt keinen Stichzwang.</li>
+<li>Den Stich macht der höchste Trumpf, sonst die höchste Karte der ausgespielten Farbe. Wer sticht, spielt als Nächstes aus.</li></ul>
+<h3>Sauspiel (Rufspiel)</h3>
+<ul><li>Der Spieler ruft eine Sau (Eichel, Gras oder Schellen, nie Herz). Wer sie hat, ist sein geheimer Partner. Erst wenn die Sau fällt, wissen alle Bescheid.</li>
+<li>Rufen darf man nur eine Farbe, von der man selbst mindestens eine Karte hat (ohne Ober und Unter), und nicht die eigene Sau.</li>
+<li>Wird die Ruffarbe zum ersten Mal ausgespielt („die Sau wird gesucht“), muss der Partner die gerufene Sau zugeben.</li>
+<li>Der Partner darf die gerufene Sau nicht abwerfen, außer im letzten Stich.</li>
+<li>Der Partner darf die Ruffarbe nur mit der Sau ausspielen. Ausnahme Davonlaufen: Wer mindestens 4 Karten der Ruffarbe hat (kurze Karte: 3), darf eine andere Karte dieser Farbe ausspielen.</li>
+<li>Spieler und Partner brauchen zusammen mindestens 61 Augen. Bei 60 haben die Gegner gewonnen.</li></ul>
+<h3>Solospiele</h3>
+<ul><li><b>Farbsolo:</b> wie Sauspiel, aber die gewählte Farbe statt Herz ist Trumpf. Der Spieler spielt allein gegen drei.</li>
+<li><b>Wenz:</b> nur die vier Unter sind Trumpf. Die Ober stehen in ihrer Farbe zwischen König und Neun.</li>
+<li><b>Geier:</b> nur die vier Ober sind Trumpf. Die Unter stehen in ihrer Farbe.</li>
+<li><b>Farbwenz / Farbgeier:</b> Unter bzw. Ober und zusätzlich eine Farbe sind Trumpf.</li>
+<li><b>Bettel:</b> Der Spieler darf keinen einzigen Stich machen. Es gibt keinen Trumpf, Reihenfolge je Farbe: Sau, König, Ober, Unter, Zehn, Neun, Acht, Sieben.</li>
+<li><b>Tout:</b> Ansage zu einem Solo, Wenz oder Geier, alle Stiche zu machen. Gelingt es, zählt das Spiel doppelt. Geht ein Stich verloren, ist es verloren.</li>
+<li><b>Sie:</b> Wer alle vier Ober und alle vier Unter hat, gewinnt sofort, mit vierfachem Solowert.</li></ul>
+<h3>Schneider, Schwarz, Laufende</h3>
+<ul><li><b>Schneider:</b> Die Verlierer haben 30 Augen oder weniger (Spieler gewinnt mit 91 oder mehr, Gegner gewinnen, wenn der Spieler höchstens 30 hat).</li>
+<li><b>Schwarz:</b> Die Verlierer haben keinen einzigen Stich gemacht.</li>
+<li><b>Laufende:</b> die höchsten Trümpfe in ununterbrochener Reihe bei einer Partei („mit drei“ oder „ohne drei“). Sie zählen beim Sauspiel und Solo ab 3, beim Wenz und Geier ab 2 (einstellbar).</li></ul>
+<h3>Abrechnung</h3>
+<ul><li>Spielwert = Grundtarif + Schneider + Schwarz + Laufende, verdoppelt durch Tout, jedes Klopfen, Kontra und Re.</li>
+<li>Sauspiel: Jeder der beiden Verlierer zahlt einem Gewinner den Spielwert.</li>
+<li>Solo, Wenz, Geier, Bettel: Der Spieler bekommt den Wert von jedem der drei Gegner oder zahlt ihn an jeden.</li></ul>
+<h3>Ramsch</h3>
+<p>Spielt keiner, kann geramscht werden. Trumpf wie beim Sauspiel, jeder spielt für sich. Wer die meisten Augen hat, verliert und zahlt jedem anderen den Sauspieltarif. Bei Gleichstand verliert, wer mehr Stiche hat. Jede „Jungfrau“ (Spieler ohne Stich) verdoppelt. Macht einer alle Stiche (Durchmarsch), gewinnt er wie bei einem Solo.</p>
+<h3>Übungshilfen</h3>
+<p><kbd>Tipp</kbd> (Glühbirne) schlägt dir eine Karte vor und erklärt warum. Nicht erlaubte Karten werden abgedunkelt. Tippst du trotzdem darauf, steht da, welche Regel es verbietet. Der Stapel zeigt den letzten Stich.</p>
+<p class="credit">Kartenbilder: eigene Zeichnung im Stil des bayerischen Blatts.</p>`;
+
+/* ================= Start ================= */
+function welcome(){
+  buildDeck();S=null;renderAll();
+  const pv=['EO','GU','HA','S10'].map(id=>`<div class="card" style="--w:58px;transform:rotate(${{EO:-9,GU:-3,HA:3,S10:9}[id]}deg)"><img src="${cardSrc(id)}" alt="${cname(fromId(id))}"></div>`).join('');
+  panel(`<div style="display:flex;justify-content:center;gap:4px;margin:2px 0 10px">${pv}</div><h2 style="text-align:center">Grüß Gott!</h2>
+    <p style="text-align:center">Setz dich an den Stammtisch und spiel gegen Sepp, Resi und Franz.</p>
+    <p class="small" style="text-align:center">Spielgeld: <b>${money(wallet.bal,false)}</b> · Einsatz ${stakeInfo()}</p>
+    <div class="btns"><button class="pri" id="go">Karten geben</button><button id="gmoney">Einsatz</button><button id="gset">Einstellungen</button></div>`);
+  $('#go').onclick=startGame;
+  $('#gmoney').onclick=OPEN.money;
+  $('#gset').onclick=OPEN.set;
+}
+welcome();
+loadOwnDeck();
+</script>
+
+<script>
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+</script>
+
+</html>
